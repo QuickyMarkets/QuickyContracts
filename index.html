@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quicky Markets — Contract Generator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;font-size:14px;color:#1a1a1a;background:#f5f5f2}
+.app{display:flex;min-height:100vh}
+.sidebar{width:240px;flex-shrink:0;background:#fff;border-right:1px solid #e0e0d8;padding:1rem;display:flex;flex-direction:column;gap:4px;position:fixed;top:0;bottom:0;overflow-y:auto}
+.sidebar-logo{font-size:13px;font-weight:700;color:#1a1a1a;padding:0 4px;margin-bottom:.75rem}
+.nav-item{padding:9px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:#666;transition:background .15s}
+.nav-item:hover{background:#f5f5f2}
+.nav-item.active{background:#f0f0ec;color:#1a1a1a;font-weight:600}
+.main{margin-left:240px;flex:1;min-height:100vh}
+.section{display:none;padding:2rem;max-width:880px}
+.section.active{display:block}
+h2{font-size:20px;font-weight:700;margin-bottom:1.25rem;color:#1a1a1a}
+.field-group{margin-bottom:1rem}
+label{display:block;font-size:12px;color:#666;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+input[type=text],input[type=date],input[type=number],select,textarea{width:100%;padding:8px 11px;border:1px solid #d4d4cc;border-radius:8px;font-size:13px;background:#fff;color:#1a1a1a;outline:none;font-family:Arial,sans-serif}
+input:focus,select:focus,textarea:focus{border-color:#888;box-shadow:0 0 0 3px rgba(0,0,0,.06)}
+textarea{resize:vertical;min-height:60px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:#fff;border:1px solid #e0e0d8;border-radius:12px;padding:1.1rem 1.25rem;margin-bottom:1rem}
+.card-title{font-size:13px;font-weight:700;margin-bottom:.85rem;color:#1a1a1a;text-transform:uppercase;letter-spacing:.04em}
+.og2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:.75rem}
+.og3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:.75rem}
+.oc{border:1.5px solid #e0e0d8;border-radius:10px;padding:.85rem 1rem;cursor:pointer;transition:all .15s;background:#fff}
+.oc:hover{border-color:#aaa;background:#fafafa}
+.oc.sel{border:2px solid #1a1a1a;background:#fafaf8}
+.oc.disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+.ol{font-weight:700;font-size:13px;margin-bottom:3px}
+.od{font-size:11px;color:#888;line-height:1.5}
+.tr{display:flex;align-items:flex-start;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f0f0ec}
+.tr:last-child{border-bottom:none}
+.tl{font-size:13px;font-weight:500}
+.ts{font-size:11px;color:#888;margin-top:2px}
+input[type=checkbox]{width:17px;height:17px;cursor:pointer;flex-shrink:0;margin-top:2px}
+.tier-row{display:grid;grid-template-columns:60px 1fr 1fr 80px 28px;gap:8px;align-items:center;margin-bottom:8px}
+.tier-row input{padding:5px 8px}
+.add-tier{font-size:12px;color:#1a5276;cursor:pointer;padding:4px 0;font-weight:600}
+.rm{font-size:18px;color:#aaa;cursor:pointer;text-align:center;line-height:1}
+.rm:hover{color:#e74c3c}
+.footer-bar{border-top:1px solid #e0e0d8;padding:.85rem 2rem;display:flex;align-items:center;gap:10px;background:#fff;margin-left:240px;position:sticky;bottom:0;z-index:10}
+button.btn{padding:8px 18px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid #d4d4cc;background:#fff;color:#1a1a1a;transition:all .15s;font-weight:600}
+button.btn:hover{background:#f5f5f2;border-color:#aaa}
+button.btn.primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+button.btn.primary:hover{background:#333}
+.sdots{display:flex;gap:5px;align-items:center;flex:1}
+.sdot{width:8px;height:8px;border-radius:50%;background:#d4d4cc}
+.sdot.done{background:#1a1a1a}
+.sdot.active{background:#1a1a1a;box-shadow:0 0 0 3px #e8e8e4}
+.ibox{background:#eef4fb;border:1px solid #b8d4f0;border-radius:8px;padding:.65rem .9rem;font-size:12px;color:#1a4a7a;margin-bottom:1rem;line-height:1.6}
+.wbox{background:#fff8ec;border:1px solid #f5c842;border-radius:8px;padding:.65rem .9rem;font-size:12px;color:#6b4c00;margin-bottom:1rem;line-height:1.6}
+.gbox{background:#f2f5ec;border:1px solid #bdd4a0;border-left:3px solid #6a9a30;border-radius:0 8px 8px 0;padding:.8rem 1rem;font-size:11.5px;color:#253810;margin-bottom:.85rem;line-height:1.8;font-family:'Times New Roman',serif}
+.gbox-lbl{font-family:Arial,sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#4a7020;font-weight:700;display:block;margin-bottom:.35rem}
+.cond{display:none}
+.cond.show{display:block}
+.cp{background:#fafaf6;border:1px solid #d8d4c8;border-left:3px solid #c8b86a;border-radius:0 8px 8px 0;padding:.85rem 1rem;font-size:11.5px;line-height:1.85;color:#3a3520;font-family:'Times New Roman',serif;margin-top:.6rem;margin-bottom:.25rem;white-space:pre-wrap;word-break:break-word}
+.cp-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#9a8a40;margin-bottom:.3rem;font-family:Arial,sans-serif}
+.st-top{display:flex;align-items:baseline;gap:12px;margin-bottom:1.5rem}
+.st-top h2{margin-bottom:0}
+.sn{font-size:12px;color:#888}
+.inv-hdr{display:grid;grid-template-columns:18px 1fr 70px 110px 110px 28px;gap:8px;margin-bottom:4px}
+.inv-hdr span{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em}
+.inv-row{display:grid;grid-template-columns:18px 1fr 70px 110px 110px 28px;gap:8px;align-items:center;margin-bottom:6px}
+.inv-row input{padding:6px 8px}
+.inv-total{display:flex;justify-content:flex-end;gap:12px;align-items:center;padding:.5rem 0;border-top:2px solid #1a1a1a;margin-top:.5rem}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="sidebar">
+  <div class="sidebar-logo">&#9889; Quicky Markets</div>
+  <div style="font-size:11px;font-weight:700;color:#aaa;padding:0 4px;margin-bottom:.25rem;letter-spacing:.05em">CONTRACT BUILDER</div>
+  <div class="nav-item active" onclick="goTo(0)">1. Parties &amp; Property</div>
+  <div class="nav-item" onclick="goTo(1)">2. Buildout &amp; Ownership</div>
+  <div class="nav-item" onclick="goTo(2)">3. Fee Structure</div>
+  <div class="nav-item" onclick="goTo(3)">4. Term &amp; Termination</div>
+  <div class="nav-item" onclick="goTo(4)">5. Access &amp; Theft</div>
+  <div class="nav-item" onclick="goTo(5)">6. Special Clauses</div>
+  <div class="nav-item" onclick="goTo(6)">7. Signatures &amp; Exhibits</div>
+  <div class="nav-item" onclick="goTo(7)" style="margin-top:auto;border-top:1px solid #f0f0ec;padding-top:12px">&#128196; Export</div>
+  <div class="nav-item" onclick="goTo(8);loadFinalEditor()">&#9998; Final Editor</div>
+  <div style="border-top:1px solid #f0f0ec;padding-top:10px;margin-top:6px;display:flex;flex-direction:column;gap:5px">
+    <button class="btn" onclick="saveContract()" style="font-size:12px;padding:7px 10px;width:100%;text-align:left">&#128190; Save to browser</button>
+    <button class="btn" onclick="openSaved()" style="font-size:12px;padding:7px 10px;width:100%;text-align:left">&#128193; Load from browser</button>
+    <button class="btn primary" onclick="exportContractData()" style="font-size:12px;padding:7px 10px;width:100%;text-align:left">&#128229; Export contract data</button>
+    <button class="btn" onclick="document.getElementById('file-upload-input').click()" style="font-size:12px;padding:7px 10px;width:100%;text-align:left">&#128228; Import contract data</button>
+    <input type="file" id="file-upload-input" accept=".json" style="display:none" onchange="importContractData(this)">
+  </div>
+</div>
+<div class="main">
+
+<!-- ═══ 0: PARTIES ═══ -->
+<div class="section active" id="sec-0">
+  <div class="st-top"><h2>Parties &amp; Property</h2></div>
+  <div class="card">
+    <div class="card-title">Client information</div>
+    <div class="row2">
+      <div class="field-group"><label>Client legal entity name</label><input type="text" id="clientName" placeholder="e.g. North MB Owner LLC" oninput="lu()"></div>
+      <div class="field-group"><label>State of formation</label>
+        <select id="clientState" onchange="lu()">
+          <option>Alabama</option><option>Alaska</option><option>Arizona</option><option>Arkansas</option><option>California</option><option>Colorado</option><option>Connecticut</option><option>Delaware</option><option selected>Florida</option><option>Georgia</option><option>Hawaii</option><option>Idaho</option><option>Illinois</option><option>Indiana</option><option>Iowa</option><option>Kansas</option><option>Kentucky</option><option>Louisiana</option><option>Maine</option><option>Maryland</option><option>Massachusetts</option><option>Michigan</option><option>Minnesota</option><option>Mississippi</option><option>Missouri</option><option>Montana</option><option>Nebraska</option><option>Nevada</option><option>New Hampshire</option><option>New Jersey</option><option>New Mexico</option><option>New York</option><option>North Carolina</option><option>North Dakota</option><option>Ohio</option><option>Oklahoma</option><option>Oregon</option><option>Pennsylvania</option><option>Rhode Island</option><option>South Carolina</option><option>South Dakota</option><option>Tennessee</option><option>Texas</option><option>Utah</option><option>Vermont</option><option>Virginia</option><option>Washington</option><option>West Virginia</option><option>Wisconsin</option><option>Wyoming</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-group"><label>Client mailing address</label><input type="text" id="clientMailAddr" placeholder="e.g. 2145 NE 164th St #3, North Miami Beach, FL 33162" oninput="lu()"></div>
+    <div class="row2">
+      <div class="field-group"><label>Property / market address</label><input type="text" id="propAddr" placeholder="e.g. 445 Hialeah Drive, Hialeah, FL 33010" oninput="lu()"></div>
+      <div class="field-group"><label>County (dispute resolution)</label>
+        <select id="county" onchange="lu()"><option value="Miami-Dade">Miami-Dade</option><option value="Broward">Broward</option></select>
+      </div>
+    </div>
+    <div class="field-group"><label>Effective date</label><input type="date" id="effectiveDate" oninput="lu()"></div>
+    <div class="cp-lbl">&#128196; Contract opening paragraph</div>
+    <div class="cp" id="prev-preamble">Fill in the fields above.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Client contact for notices (&#167;5.1)</div>
+    <div class="row2">
+      <div class="field-group"><label>Contact name</label><input type="text" id="contactName" placeholder="e.g. Daniel Lazoff" oninput="lu()"></div>
+      <div class="field-group"><label>Title</label><input type="text" id="contactTitle" placeholder="e.g. Manager" oninput="lu()"></div>
+    </div>
+    <div class="row2">
+      <div class="field-group"><label>Notice address (blank = mailing address)</label><input type="text" id="noticeAddr" oninput="lu()"></div>
+      <div class="field-group"><label>Email</label><input type="text" id="contactEmail" placeholder="e.g. manager@example.com" oninput="lu()"></div>
+    </div>
+    <div class="cp-lbl">&#128196; &#167;5.1 Client notice block</div>
+    <div class="cp" id="prev-notice">Fill in contact details.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Client signature block</div>
+    <div class="row2">
+      <div class="field-group"><label>Managed by / its</label><input type="text" id="managerEntity" placeholder="e.g. RAM Partners LLC" oninput="lu()"></div>
+      <div class="field-group"><label>Manager role</label>
+        <select id="managerRole" onchange="lu()"><option>Regional Manager</option><option>Manager</option><option>Vice President</option><option>its Manager</option><option>Authorized Agent</option></select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field-group"><label>Signatory name</label><input type="text" id="sigName" placeholder="e.g. Amy Adorno" oninput="lu()"></div>
+      <div class="field-group"><label>Signatory title</label><input type="text" id="sigTitle" placeholder="e.g. Authorized signer" oninput="lu()"></div>
+    </div>
+    <div class="cp-lbl">&#128196; Signature block preview</div>
+    <div class="cp" id="prev-sig">Fill in signatory details.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Property details</div>
+    <div class="row2">
+      <div class="field-group"><label>Total residential units</label><input type="number" id="numUnits" placeholder="e.g. 357" min="1" oninput="lu()"></div>
+      <div class="field-group"><label>Days to complete installation (from space ready date)</label>
+        <input type="number" id="installDays" value="90" min="30" max="365" step="1" oninput="lu()" placeholder="e.g. 90">
+        <div style="font-size:11px;color:#888;margin-top:4px">Clock starts only once Client confirms the Market space is ready for the Vendor to take measurements — not from signing date.</div>
+      </div>
+    </div>
+    <div class="cp-lbl">&#128196; &#167;1.2 Installation clause preview</div>
+    <div class="cp" id="prev-install">Fill in the installation days above.</div>
+  </div>
+</div>
+
+<!-- ═══ 1: BUILDOUT ═══ -->
+<div class="section" id="sec-1">
+  <div class="st-top"><h2>Buildout &amp; Ownership</h2><span class="sn">&#167;1.2, &#167;2.1, &#167;3.3, &#167;4.5</span></div>
+  <div class="ibox">This is the foundational question — it determines who pays for the store, who owns what, and how early termination works. All other sections remain fully editable regardless of this choice.</div>
+  <div class="card">
+    <div class="card-title">Who pays for the buildout?</div>
+    <div class="og2">
+      <div class="oc sel" id="bo-vendor" onclick="selectBuildout('vendor')">
+        <div class="ol">Quicky Markets pays for buildout</div>
+        <div class="od">Vendor funds all furniture, refrigeration, equipment, and installation. Vendor retains operational ownership of all Market Assets. Furniture is highly customized to the property. Client may request custom design at their incremental cost. If client terminates early, they reimburse vendor per Exhibit B.</div>
+      </div>
+      <div class="oc" id="bo-client" onclick="selectBuildout('client')">
+        <div class="ol">Client pays for buildout</div>
+        <div class="od">Client funds the full buildout. Physical assets vest in the client upon installation. Vendor operates the market and retains ownership of the POS system and all data. Early termination carries a flat fee covering vendor's time and coordination.</div>
+      </div>
+    </div>
+    <div class="cond show" id="cfg-bo-vendor">
+      <div class="tr"><span><div class="tl">Client requested custom furniture</div><div class="ts">Client asked for specific style or material beyond standard spec — client pays the incremental cost, agreed in writing before procurement</div></span><input type="checkbox" id="customFurniture" onchange="lu()"></div>
+    </div>
+    <div class="cond" id="cfg-bo-client">
+      <div class="field-group" style="margin-top:.75rem"><label>Early termination flat fee ($) — preset $5,000, editable</label><input type="number" id="etClientAmt" value="5000" min="0" step="500" oninput="lu()"></div>
+    </div>
+    <div class="cp-lbl" style="margin-top:.75rem">&#128196; &#167;4.5 Buildout &amp; Ownership clause</div>
+    <div class="cp" id="prev-buildout">Select above to see the clause.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Furniture lighting (&#167;4.5 add-on)</div>
+    <div class="ibox">Integrated LED lighting is a premium upgrade. Optional regardless of who pays for buildout. Client always bears the cost.</div>
+    <div class="tr"><span><div class="tl">Client opts in to integrated furniture lighting</div><div class="ts">LED lighting built into Market furniture. Client bears cost. If not selected, contract states client declined this option.</div></span><input type="checkbox" id="hasLighting" onchange="toggleLighting()"></div>
+    <div class="cond" id="cfg-lighting" style="margin-top:.85rem">
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:.85rem">
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;font-weight:400;text-transform:none;letter-spacing:0;color:#1a1a1a">
+          <input type="radio" name="lp" id="lp-upfront" value="upfront" checked onchange="lu()" style="margin-top:3px;width:16px;height:16px;flex-shrink:0">
+          <span><strong>Client pays upfront</strong> — Full lighting cost invoiced before or at installation.</span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:13px;font-weight:400;text-transform:none;letter-spacing:0;color:#1a1a1a">
+          <input type="radio" name="lp" id="lp-deduct" value="deduct" onchange="lu()" style="margin-top:3px;width:16px;height:16px;flex-shrink:0">
+          <span><strong>Deducted from revenue share</strong> — Equal installments deducted from quarterly fee payments until balance is fully recovered.</span>
+        </label>
+      </div>
+      <div class="field-group"><label>Lighting cost ($)</label><input type="number" id="lightingCost" value="0" min="0" step="100" oninput="lu()" placeholder="e.g. 3500"></div>
+    </div>
+    <div class="cp-lbl" style="margin-top:.75rem">&#128196; Lighting clause</div>
+    <div class="cp" id="prev-lighting">Toggle above to see the clause.</div>
+  </div>
+</div>
+
+<!-- ═══ 2: FEE ═══ -->
+<div class="section" id="sec-2">
+  <div class="st-top"><h2>License Fee Structure</h2><span class="sn">&#167;2.2</span></div>
+  <div class="ibox">All revenue-based fees are calculated on <strong>Net Collected Revenue</strong> — gross revenues after sales tax and credit card processing fees (2.59% + $0.15/transaction). Both are pass-throughs the vendor never keeps.</div>
+  <div class="og2">
+    <div class="oc sel" id="opt-nofee" onclick="selectFee('nofee')"><div class="ol">No fee — amenity deal</div><div class="od">Vendor keeps all revenue. No payment from vendor to client. Market is a resident amenity.</div></div>
+    <div class="oc" id="opt-fixed-pct" onclick="selectFee('fixed-pct')"><div class="ol">Fixed revenue percentage</div><div class="od">Flat % of Net Collected Revenue each quarter.</div></div>
+    <div class="oc" id="opt-tiered" onclick="selectFee('tiered')"><div class="ol">Tiered revenue sharing</div><div class="od">0% below threshold, steps up. Optional monthly cap.</div></div>
+    <div class="oc" id="opt-greater" onclick="selectFee('greater')"><div class="ol">Greater of: % revenue OR per-unit</div><div class="od">Whichever is larger — % of Net Collected Revenue or $X per residential unit.</div></div>
+  </div>
+  <div class="cond" id="cfg-fixed-pct">
+    <div class="card"><div class="card-title">Fixed percentage settings</div>
+      <div class="row2">
+        <div class="field-group"><label>Percentage (%)</label><input type="number" id="fixedPct" value="10" min="1" max="100" step="0.5" oninput="lu()"></div>
+        <div class="field-group"><label>Payment basis</label><select id="fixedBasis" onchange="lu()"><option value="quarterly">Quarterly</option><option value="monthly">Monthly</option></select></div>
+      </div>
+    </div>
+  </div>
+  <div class="cond" id="cfg-tiered">
+    <div class="card"><div class="card-title">Tiered settings</div>
+      <div class="inv-hdr" style="grid-template-columns:60px 1fr 1fr 80px 28px"><span>Tier</span><span>From ($)</span><span>To ($)</span><span>Rate %</span><span></span></div>
+      <div id="tier-rows"></div>
+      <div class="add-tier" onclick="addTier()">+ Add tier</div>
+      <div class="field-group" style="margin-top:.85rem"><label>Monthly cap ($ — 0 = none)</label><input type="number" id="tierCap" value="0" min="0" step="100" oninput="lu()"></div>
+    </div>
+  </div>
+  <div class="cond" id="cfg-greater">
+    <div class="card"><div class="card-title">Greater-of settings</div>
+      <div class="row2">
+        <div class="field-group"><label>Percentage (%)</label><input type="number" id="greaterPct" value="10" min="1" max="100" step="0.5" oninput="lu()"></div>
+        <div class="field-group"><label>Per-unit amount ($/month)</label><input type="number" id="greaterPerUnit" value="1.00" min="0" step="0.25" oninput="lu()"></div>
+      </div>
+    </div>
+  </div>
+  <div class="cp-lbl">&#128196; &#167;2.2 License Fee — as it will appear in the contract</div>
+  <div class="cp" id="prev-fee">Select a fee structure above.</div>
+</div>
+
+<!-- ═══ 3: TERM ═══ -->
+<div class="section" id="sec-3">
+  <div class="st-top"><h2>Term &amp; Termination</h2><span class="sn">&#167;3.1&#8211;3.4</span></div>
+  <div class="card">
+    <div class="card-title">Initial term (&#167;3.1)</div>
+    <div class="row2">
+      <div class="field-group"><label>Initial term (years)</label>
+        <input type="number" id="termYears" value="5" min="1" max="25" step="1" oninput="lu()" placeholder="e.g. 5">
+      </div>
+      <div class="field-group"><label>After initial term</label>
+        <select id="termRenewal" onchange="lu()">
+          <option value="auto5">Auto-renew same term (standard)</option>
+          <option value="auto1">Auto-renew 1 year</option>
+          <option value="mtm">Month-to-month</option>
+          <option value="mutual1">Mutual agreement — 1 year</option>
+        </select>
+      </div>
+    </div>
+    <div class="cp-lbl">&#128196; &#167;3.1 Term</div>
+    <div class="cp" id="prev-term">Select above.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Termination (&#167;3.2)</div>
+    <div class="ibox"><strong>Cure-based termination:</strong> Either party may only terminate during the Initial Term if the other has materially breached the agreement and failed to cure within the notice period. This protects the relationship and keeps the client committed unless something truly goes wrong.</div>
+    <div class="row2">
+      <div class="field-group"><label>Cure period (days) — breach notice window</label><input type="number" id="termNoticeDays" value="90" min="15" max="180" step="15" oninput="lu()">
+        <div style="font-size:11px;color:#888;margin-top:3px">How long the breaching party has to fix a material breach before termination is triggered during the Initial Term.</div>
+      </div>
+      <div class="field-group"><label>Post-term notice (days) — termination after Initial Term</label><input type="number" id="postTermDays" value="90" min="15" max="180" step="15" oninput="lu()">
+        <div style="font-size:11px;color:#888;margin-top:3px" id="postTermNote">After the Initial Term, either party can exit for any reason with this many days notice. Only applies when renewal is set to month-to-month.</div>
+      </div>
+    </div>
+    <div class="tr"><span><div class="tl">Client may terminate on 60-day notice if property is sold</div><div class="ts">Separate termination right triggered only by a property sale or ownership transfer</div></span><input type="checkbox" id="propSaleTerm" checked onchange="lu()"></div>
+    <div class="cp-lbl">&#128196; &#167;3.2 Termination</div>
+    <div class="cp" id="prev-termination">Adjust settings above.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Early termination (&#167;3.3)</div>
+    <div class="ibox" id="et-info">Based on your buildout selection, the applicable early termination model is pre-selected. You may change it here if needed.</div>
+    <div class="og2" style="margin-bottom:.5rem">
+      <div class="oc sel" id="et-furniture" onclick="selectET('furniture')"><div class="ol">Furniture reimbursement</div><div class="od">Client reimburses vendor for furniture, shipping, and removal per Exhibit B.</div></div>
+      <div class="oc" id="et-flatfee" onclick="selectET('flatfee')"><div class="ol">Flat termination fee</div><div class="od">Fixed fee covering vendor's time and contractor coordination.</div></div>
+      <div class="oc" id="et-none" onclick="selectET('none')"><div class="ol">No penalty</div><div class="od">No financial obligation beyond notice period.</div></div>
+    </div>
+    <div class="cond show" id="cfg-et-furniture">
+      <div class="tr"><span><div class="tl">Penalty only within first 365 days</div><div class="ts">After year 1, no early termination financial obligation</div></span><input type="checkbox" id="et365" checked onchange="lu()"></div>
+    </div>
+    <div class="cond" id="cfg-et-flatfee">
+      <div class="field-group" style="margin-top:.75rem"><label>Flat fee ($)</label><input type="number" id="etFlatAmt" value="5000" min="0" step="500" oninput="lu()"></div>
+    </div>
+    <div class="cp-lbl">&#128196; &#167;3.3 Early Termination</div>
+    <div class="cp" id="prev-et">Select above.</div>
+  </div>
+</div>
+
+<!-- ═══ 4: ACCESS & THEFT ═══ -->
+<div class="section" id="sec-4">
+  <div class="st-top"><h2>Access Control &amp; Theft</h2><span class="sn">&#167;2.3&#8211;2.6</span></div>
+  <div class="card">
+    <div class="card-title">Step 1 — Does the property have traceable access control?</div>
+    <div class="ibox"><strong>Traceable access control</strong> means the system links each market entry to a specific unit, resident, or named individual — such as individual FOB keys, key cards, mobile credentials, or biometric access. A shared door code or building-wide PIN does <strong>not</strong> qualify.</div>
+    <div class="og2">
+      <div class="oc sel" id="ac-yes" onclick="selectAccess('yes')">
+        <div class="ol">Yes — traceable access control</div>
+        <div class="od">Property uses individual FOBs, key cards, mobile credentials, or biometrics linked to a specific unit or person. Theft can be traced. All three theft protocol options are available.</div>
+      </div>
+      <div class="oc" id="ac-no" onclick="selectAccess('no')">
+        <div class="ol">No — no traceable access control</div>
+        <div class="od">Entry is not individually traceable. Client is financially liable for all theft at vendor's wholesale cost. Vendor provides camera access link and inventory reports. Client management still must communicate theft notices.</div>
+      </div>
+    </div>
+    <div class="wbox" style="margin-top:.5rem"><strong>Always included in every contract regardless of current access status:</strong> If the property loses, removes, or downgrades its access control system at any point during the term such that individual traceability is no longer possible, the Client's financial liability for theft automatically shifts to the no-traceable-access structure from that date forward. Client must notify Vendor in writing within five (5) business days. Failure to notify is a material breach.</div>
+  </div>
+
+  <!-- NO ACCESS path -->
+  <div class="cond" id="cfg-ac-no">
+    <div class="card">
+      <div class="card-title">No traceable access — theft &amp; liability</div>
+      <div class="gbox">
+        <span class="gbox-lbl">&#10003; Fixed language for this path</span>
+        Because the Property does not have an access control system capable of linking market entry to a specific unit or responsible individual, the Client assumes full financial responsibility for all theft at the Market Location. The Vendor shall provide the Client with a permanent shared access link to the Market's camera system — the Client may create its own account and view live and recorded footage at any time at no cost. The Vendor makes no warranty as to footage retention duration, as storage depends on activity volume. The Vendor shall provide quarterly inventory reconciliation reports. Any unexplained discrepancy constitutes the Theft Loss at the Vendor's wholesale cost. The Vendor bears no obligation to identify perpetrators or generate incident reports. The Client's management team shall forward the Vendor's theft notices and include written warnings of potential reporting to local authorities, non-renewal of lease, and eviction (as permitted under Florida law) within five (5) business days of receipt. The Client is not required to follow through. The Theft Loss shall be deducted from any revenue share or fee owed by the Vendor to the Client for that quarter. If the Theft Loss exceeds the amount owed, the Client shall pay the remaining balance to the Vendor within fifteen (15) days of the quarterly report.
+      </div>
+    </div>
+  </div>
+
+  <!-- YES ACCESS path -->
+  <div class="cond show" id="cfg-ac-yes">
+    <div class="card">
+      <div class="card-title">Step 2 — Theft protocol</div>
+      <div class="ibox">Since the property has traceable access control, you can choose how theft is handled. All options include a permanent camera access link for the client and quarterly inventory reconciliation reports.</div>
+      <div class="og3">
+        <div class="oc" id="th-a" onclick="selectTheft('a')">
+          <div class="ol">Option A — Good faith only</div>
+          <div class="od">Vendor absorbs all theft. Client management must forward reports and send written threats (authorities, non-renewal, eviction) within 5 business days. No financial liability on client. Failure to communicate is a breach subject to the cure period.</div>
+        </div>
+        <div class="oc sel" id="th-b" onclick="selectTheft('b')">
+          <div class="ol">Option B — Full fine protocol</div>
+          <div class="od">Client management forwards reports AND imposes fines through the building's lease system. Fines offset theft loss. Surplus split 50/50. Good-faith failure capped at revenue share. Non-compliance = full wholesale cost.</div>
+        </div>
+        <div class="oc" id="th-c" onclick="selectTheft('c')">
+          <div class="ol">Option C — Vendor-led enforcement</div>
+          <div class="od">Vendor imposes all fines directly. Client applies lease pressure (warnings, non-renewal, eviction) within 5 business days. Vendor may report to authorities. Good-faith failure capped at revenue share. Non-compliance = full wholesale cost.</div>
+        </div>
+      </div>
+
+      <div class="cond" id="cfg-th-a">
+        <div class="gbox" style="margin-top:.5rem">
+          <span class="gbox-lbl">Option A — Good faith communication. No financial liability on client ever.</span>
+          The Vendor absorbs all Theft Losses. The Client's management team shall forward the Vendor's theft reports to the identified resident within five (5) business days of receipt and shall include written warnings of potential reporting to local law enforcement, non-renewal of lease, and eviction proceedings as permitted under applicable Florida law. The Client is not required to follow through on such actions. The Client shall confirm in writing to the Vendor what communications were sent and on what date within the same five (5) business day window. Failure to forward communications and confirm delivery within the required period shall constitute a breach of this Agreement subject to the cure provisions of Section 3.2.
+        </div>
+      </div>
+
+      <div class="cond show" id="cfg-th-b">
+        <div style="margin-top:.5rem">
+          <div class="row2">
+            <div class="field-group"><label>Fine per incident ($)</label><input type="number" id="fineAmt" value="250" min="0" step="50" oninput="lu()"></div>
+            <div class="field-group"><label>1st unintentional offense</label><select id="unintentional1" onchange="lu()"><option value="warning">Written warning</option><option value="fine">Immediate fine</option></select></div>
+          </div>
+          <div class="tr"><span><div class="tl">Excess fine proceeds split 50/50</div><div class="ts">If fines collected exceed the theft loss, surplus is split equally between vendor and client</div></span><input type="checkbox" id="fineSplit" checked onchange="lu()"></div>
+        </div>
+      </div>
+
+      <div class="cond" id="cfg-th-c">
+        <div style="margin-top:.5rem">
+          <div class="row2">
+            <div class="field-group"><label>Fine per incident ($)</label><input type="number" id="fineAmtC" value="250" min="0" step="50" oninput="lu()"></div>
+            <div class="field-group"></div>
+          </div>
+          <div class="tr"><span><div class="tl">Excess fine proceeds split 50/50</div></span><input type="checkbox" id="fineSplitC" checked onchange="lu()"></div>
+        </div>
+      </div>
+
+      <div class="cp-lbl" style="margin-top:.75rem">&#128196; Theft clauses — as they will appear in the contract</div>
+      <div class="cp" id="prev-theft">Select a theft protocol above.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 5: SPECIAL CLAUSES ═══ -->
+<div class="section" id="sec-5">
+  <div class="st-top"><h2>Special Clauses &amp; Add-ons</h2></div>
+  <div class="card">
+    <div class="card-title">Equipment &amp; access (&#167;1.2)</div>
+    <div class="tr"><span><div class="tl">All equipment must be new</div></span><input type="checkbox" id="newEquipment" checked onchange="lu()"></div>
+    <div class="tr"><span><div class="tl">Client provides ventilation / hot air extraction</div><div class="ts">Required for refrigeration equipment</div></span><input type="checkbox" id="ventilation" checked onchange="lu()"></div>
+    <div id="cfg-fob-row" class="">
+      <div class="tr"><span><div class="tl">Client provides FOB keys</div></span><input type="checkbox" id="fobKeys" checked onchange="toggleFob()"></div>
+      <div class="cond show" id="cfg-fob" style="padding:.5rem 0"><div class="field-group"><label>Number of FOB keys</label><input type="number" id="fobCount" value="4" min="1" max="20" oninput="lu()"></div></div>
+    </div>
+    <div class="tr"><span><div class="tl">Property already has mini market space</div><div class="ts">Client delivers ready space — vendor only brings POS + merchandise</div></span><input type="checkbox" id="readySpace" checked onchange="lu()"></div>
+    <div class="tr"><span><div class="tl">Coffee machine carve-out</div><div class="ts">Client retains existing coffee machine; no additional vending or ATMs permitted</div></span><input type="checkbox" id="coffeeMachine" onchange="lu()"></div>
+    <div class="cp-lbl" style="margin-top:.75rem">&#128196; &#167;1.2 Equipment additions</div>
+    <div class="cp" id="prev-equipment">Toggle options above.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Cleaning &amp; maintenance (&#167;1.4)</div>
+    <div class="gbox">
+      <span class="gbox-lbl">&#10003; Always in every contract — non-negotiable</span>
+      The Client shall ensure the Market space is cleaned and maintained consistently with the Property's other common area amenities — including floor cleaning, trash removal, and general upkeep — no less than every other day, with daily cleaning being the expected standard. The Vendor shall be responsible for maintaining its own equipment, refrigeration units, POS systems, and millwork.
+    </div>
+    <div class="tr"><span><div class="tl">Client also responsible for furniture &amp; appliance repair</div><div class="ts">Only check when specifically negotiated — e.g. client requested custom furniture or a turnkey build</div></span><input type="checkbox" id="clientFurnitureRepair" onchange="lu()"></div>
+    <div class="cp-lbl" style="margin-top:.75rem">&#128196; &#167;1.4 Maintenance &amp; Hours</div>
+    <div class="cp" id="prev-maintenance">See above.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Alcoholic beverages (&#167;1.3)</div>
+    <div class="tr"><span><div class="tl">Include alcohol consent clause</div><div class="ts">Vendor must obtain Client's prior written consent before selling any alcoholic beverages at this location</div></span><input type="checkbox" id="alcoholConsent" checked onchange="lu()"></div>
+    <div class="cp-lbl" style="margin-top:.75rem">&#128196; Alcohol clause</div>
+    <div class="cp" id="prev-alcohol">Toggle above.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Client furniture approval (&#167;1.2 &amp; &#167;4.5)</div>
+    <div class="ibox">When checked, the client must review and approve the furniture design in writing before the vendor can begin manufacturing. This shifts the Installation Period trigger from the Space Ready Date to the Design Approval Date, and adds a written approval obligation to the buildout clause.</div>
+    <div class="tr"><span><div class="tl">Client must approve furniture design before manufacturing</div><div class="ts">Unchecked by default. Only include when client has specifically negotiated this right.</div></span><input type="checkbox" id="furnitureApproval" onchange="lu()"></div>
+    <div class="cp-lbl" style="margin-top:.85rem">&#128196; &#167;1.2 Installation clause — as it will appear</div>
+    <div class="cp" id="prev-install-approval">Toggle above to see how §1.2 changes.</div>
+    <div class="cp-lbl" style="margin-top:.75rem">&#128196; &#167;4.5 Buildout &amp; Ownership clause — as it will appear</div>
+    <div class="cp" id="prev-buildout-approval">Toggle above to see how §4.5 changes.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Exclusivity (&#167;5.4) — fixed in all contracts</div>
+    <div class="gbox">
+      <span class="gbox-lbl">&#10003; Always included</span>
+      The Client shall not lease, license, or otherwise permit any third party to operate any business at the Property substantially similar to or in direct competition with the Market's operations, including any unmanned or automated food and beverage retail or vending operation, for the entire duration of this Agreement. Any breach is a material breach.
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Insurance (&#167;5.6) — fixed in all contracts</div>
+    <div class="gbox">
+      <span class="gbox-lbl">&#10003; Always included — $1M/$2M CGL, limited scope</span>
+      Vendor carries $1M/$2M CGL covering only: vendor's furniture, equipment, POS, products sold, and vendor's personnel. Does NOT cover structural defects, faulty plumbing, electrical issues, or any incident unrelated to vendor's operations. Client bears full responsibility for all excluded categories.
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Miscellaneous</div>
+    <div class="tr"><span><div class="tl">Vendor may assign to affiliates without consent</div><div class="ts">Allows Quicky Markets to transfer agreement to a related entity freely</div></span><input type="checkbox" id="affiliateAssign" checked onchange="lu()"></div>
+    <div class="tr"><span><div class="tl">Subsidies clause</div><div class="ts">Client may subsidize specific item prices via a separate side agreement</div></span><input type="checkbox" id="subsidies" checked onchange="lu()"></div>
+    <div class="tr"><span><div class="tl">Client audit rights</div><div class="ts">Client may audit vendor sales records to verify fee accuracy (recommended for revenue-sharing deals)</div></span><input type="checkbox" id="auditRights" checked onchange="lu()"></div>
+    <div class="field-group" style="margin-top:.85rem"><label>Additional / special clauses</label><textarea id="customNotes" placeholder="Type any special clause, property-specific restriction, or deal-specific language here. This text will appear as a separate section titled &#x22;Additional Provisions&#x22; at the end of the contract body, before the signature page." rows="5" oninput="lu()"></textarea></div>
+    <div class="cp-lbl" style="margin-top:.75rem">&#128196; Additional Provisions — as it will appear in the contract</div>
+    <div class="cp" id="prev-customNotes" style="min-height:48px">Type above to see how the clause will appear in the contract.</div>
+  </div>
+</div>
+
+<!-- ═══ 6: SIGNATURES & EXHIBITS ═══ -->
+<div class="section" id="sec-6">
+  <div class="st-top"><h2>Signatures &amp; Exhibits</h2></div>
+  <div class="card">
+    <div class="card-title">Multi-tier client entity</div>
+    <div class="ibox">Some clients have a parent LLC managing the direct LLC. Add intermediate entities if needed.</div>
+    <div class="tr"><span class="tl">Client managed through intermediate entity</span><input type="checkbox" id="hasIntermediate" onchange="toggleIntermediate()"></div>
+    <div class="cond" id="cfg-intermediate">
+      <div class="row2" style="margin-top:.85rem">
+        <div class="field-group"><label>Intermediate entity name</label><input type="text" id="intEntityName" placeholder="e.g. Luxcom Equity, LLC" oninput="lu()"></div>
+        <div class="field-group"><label>State</label><select id="intEntityState" onchange="lu()"><option>Delaware</option><option>Florida</option><option>Other</option></select></div>
+      </div>
+      <div class="field-group"><label>Second intermediate entity (optional)</label><input type="text" id="int2EntityName" placeholder="e.g. Luxcom Developers Sunrise, LLC" oninput="lu()"></div>
+    </div>
+    <div class="cp-lbl" style="margin-top:.75rem">&#128196; Full signature block preview</div>
+    <div class="cp" id="prev-fullsig">Fill in party details in Step 1.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Exhibit B — Invoice / Cost Reference</div>
+    <div class="ibox" id="eb-context-info">Exhibit B adapts based on your buildout selection: when <strong>client pays</strong>, this is an invoice with a 70% upfront / 30% at completion payment structure. When <strong>vendor pays</strong>, this is a cost reference used to calculate early termination reimbursement.</div>
+    <div class="tr"><span class="tl">Include Exhibit B in contract</span><input type="checkbox" id="hasExhibitB" checked></div>
+    <div id="exhibitB-fields" style="margin-top:.85rem">
+      <div class="field-group"><label>Exhibit B title</label><input type="text" id="ebTitle" value="Furniture Build, Installation &amp; Site Prep — Cost Breakdown"></div>
+      <div class="field-group"><label>Reference note</label><input type="text" id="ebNote" value="This Exhibit is incorporated into and made a part of the Agreement pursuant to Sections 3.3 and 5.4."></div>
+      <div style="font-size:12px;color:#888;margin:.75rem 0 .4rem;font-weight:700">Line items</div>
+      <div class="inv-hdr" id="inv-hdr"><span></span><span>Description</span><span>Qty</span><span>Unit Price ($)</span><span>Total ($)</span><span></span></div>
+      <div id="inv-rows"></div>
+      <button class="btn" style="margin-top:.5rem;font-size:12px;padding:5px 12px" onclick="addInvRow()">+ Add line item</button>
+      <div class="inv-total"><span style="font-size:12px;color:#888">EXHIBIT B TOTAL</span><strong id="inv-grand-total">$0.00</strong></div>
+      <div id="eb-payment-section" style="margin-top:1rem;border-top:1px solid #f0f0ec;padding-top:.85rem">
+        <div id="eb-split-row" style="margin-bottom:.85rem">
+          <label style="display:block;font-size:12px;color:#666;margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.03em">Payment split</label>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:6px">
+              <input type="number" id="ebPct1" value="70" min="1" max="99" step="1" oninput="syncPct2()" style="width:70px;padding:8px 10px;border:1px solid #d4d4cc;border-radius:8px;font-size:13px">
+              <span style="font-size:13px;color:#555">% due upon signing</span>
+            </div>
+            <span style="color:#ccc;font-size:16px">+</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <input type="number" id="ebPct2" value="30" readonly style="width:70px;padding:8px 10px;border:1px solid #e8e8e4;border-radius:8px;font-size:13px;background:#f5f5f2;color:#888">
+              <span style="font-size:13px;color:#555">% due upon buildout completion</span>
+            </div>
+            <span style="font-size:11px;color:#aaa">= 100%</span>
+          </div>
+        </div>
+        <div class="field-group"><label>Payment instructions</label><textarea id="ebPayInstructions" placeholder="e.g. Wire transfer to: Bank, Account #, Routing # or Check payable to Quicky Markets LLC"></textarea></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 7: EXPORT ═══ -->
+<div class="section" id="sec-7">
+  <div class="st-top"><h2>Export Contract</h2></div>
+  <div class="ibox">All fields are saved in this session. Choose your format below.</div>
+  <div class="card">
+    <div class="card-title">PDF — Print or Save</div>
+    <div style="font-size:12px;color:#666;margin-bottom:.75rem;line-height:1.6">Opens the contract in a new window. Use <strong>Ctrl+P / Cmd+P</strong> and select <strong>Save as PDF</strong>. Best for sending to clients for signing.</div>
+    <button class="btn primary" onclick="exportContract()">&#128196; Open &amp; Print / Save as PDF</button>
+  </div>
+
+</div>
+
+<!-- ═══ 8: FINAL EDITOR ═══ -->
+<div class="section" id="sec-8">
+  <div class="st-top"><h2>Final Editor</h2></div>
+  <div class="ibox">
+    The full contract is rendered below exactly as it will print. Click anywhere in the document to edit &mdash; make any client-requested changes directly here. When done use <strong>Export from editor</strong> to print or save as PDF with your edits applied.
+    <br><br>
+    <strong>Note:</strong> edits here are not saved back to the form. Use <strong>Reset from form</strong> at any time to regenerate from your current settings.
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap">
+    <button class="btn primary" onclick="exportFromEditor()">&#128196; Export from editor (PDF)</button>
+    <button class="btn" onclick="loadFinalEditor()">&#8635; Reset from form</button>
+  </div>
+  <div id="final-editor-wrap" style="background:#e8e8e4;padding:24px;border-radius:12px;overflow-x:auto">
+    <div id="final-editor-frame" contenteditable="true" spellcheck="true" style="width:8.5in;min-height:11in;margin:0 auto;padding:1in;background:#fff;font-family:'Times New Roman',Times,serif;font-size:11.5pt;line-height:1.75;color:#000;outline:none;box-shadow:0 4px 24px rgba(0,0,0,.12);box-sizing:border-box;">
+      <p style="color:#aaa;font-style:italic;font-family:Arial,sans-serif;font-size:12px">Navigate to this tab or click Reset from form to load the contract for editing.</p>
+    </div>
+  </div>
+</div>
+
+</div></div>
+
+<div class="footer-bar">
+  <div class="sdots" id="step-dots"></div>
+  <button class="btn" onclick="prevSec()" id="btn-prev" style="display:none">&#8592; Back</button>
+  <button class="btn primary" onclick="nextSec()" id="btn-next">Next &#8594;</button>
+</div>
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────
+let cur=0,totalSecs=9,feeType='nofee',etType='furniture',buildoutType='vendor',accessType='yes',theftType='b';
+let tiers=[{from:0,to:3000,pct:0},{from:3000,to:6000,pct:5},{from:6000,to:null,pct:10}];
+let invRows=[{desc:'Specialist measuring space',qty:1,unit:600},{desc:'Design and 3D rendering',qty:1,unit:1500},{desc:'Furniture material',qty:1,unit:0},{desc:'Cutting and assembly of furniture',qty:1,unit:0}];
+
+// ─── NAV ────────────────────────────────────────────────────────────
+function goTo(n){
+  document.querySelectorAll('.section').forEach(function(s,i){s.classList.toggle('active',i===n);});
+  document.querySelectorAll('.nav-item').forEach(function(s,i){s.classList.toggle('active',i===n);});
+  cur=n;
+  document.getElementById('btn-prev').style.display=n===0?'none':'';
+  document.getElementById('btn-next').textContent=n===totalSecs-1?'Done':'Next \u2192';
+  renderDots();
+  if(n===8)loadFinalEditor();
+  lu();
+}
+function nextSec(){if(cur<totalSecs-1)goTo(cur+1);}
+function prevSec(){if(cur>0)goTo(cur-1);}
+function renderDots(){
+  document.getElementById('step-dots').innerHTML=Array.from({length:totalSecs},function(_,i){return '<div class="sdot '+(i<cur?'done':i===cur?'active':'')+'"></div>';}).join('');
+}
+renderDots();
+
+// ─── SELECTORS ──────────────────────────────────────────────────────
+function selectFee(t){
+  feeType=t;
+  ['nofee','fixed-pct','tiered','greater'].forEach(function(x){
+    document.getElementById('opt-'+x).classList.toggle('sel',x===t);
+    var c=document.getElementById('cfg-'+x);if(c)c.classList.toggle('show',x===t);
+  });
+  if(t==='tiered')renderTiers();
+  lu();
+}
+function selectBuildout(t){
+  buildoutType=t;
+  ['vendor','client'].forEach(function(x){
+    document.getElementById('bo-'+x).classList.toggle('sel',x===t);
+    document.getElementById('cfg-bo-'+x).classList.toggle('show',x===t);
+  });
+  if(t==='vendor')selectET('furniture');else selectET('flatfee');
+  // Update Exhibit B context
+  var ebPay=document.getElementById('ebPayTerms');
+  var ebSec=document.getElementById('eb-payment-section');
+  var ebInfo=document.getElementById('eb-context-info');
+  if(t==='client'){
+    if(ebPay)ebPay.value='70% due upon signing of this Agreement. Remaining 30% due upon completion of Market buildout and installation.';
+    if(ebSec)ebSec.style.display='';
+    var splitRow=document.getElementById('eb-split-row');if(splitRow)splitRow.style.display='';
+    var pct1=document.getElementById('ebPct1');if(pct1&&pct1.value==='')pct1.value='70';
+    syncPct2();
+    if(ebInfo)ebInfo.innerHTML='When <strong>client pays for buildout</strong>, Exhibit B is an invoice. Set the payment split below — first percentage is due upon signing, the remainder upon buildout completion.';
+  } else {
+    if(ebPay)ebPay.value='This schedule is provided for reference in connection with Section 3.3 (Early Termination). No payment is due unless early termination occurs during the applicable period.';
+    if(ebSec)ebSec.style.display='';
+    var splitRow=document.getElementById('eb-split-row');if(splitRow)splitRow.style.display='none';
+    if(ebInfo)ebInfo.innerHTML='When <strong>vendor pays for buildout</strong>, Exhibit B is a <strong>cost reference</strong> only — used to calculate reimbursement if the client triggers early termination. No upfront payment from client.';
+  }
+  lu();
+}
+function selectET(t){
+  etType=t;
+  ['furniture','flatfee','none'].forEach(function(x){
+    document.getElementById('et-'+x).classList.toggle('sel',x===t);
+    var c=document.getElementById('cfg-et-'+x);if(c)c.classList.toggle('show',x===t);
+  });
+  lu();
+}
+function selectAccess(t){
+  accessType=t;
+  ['yes','no'].forEach(function(x){
+    document.getElementById('ac-'+x).classList.toggle('sel',x===t);
+    document.getElementById('cfg-ac-'+x).classList.toggle('show',x===t);
+  });
+  // FOB keys row only makes sense when there IS traceable access control
+  var fobRow=document.getElementById('cfg-fob-row');
+  var fobChk=document.getElementById('fobKeys');
+  if(fobRow){
+    if(t==='yes'){
+      fobRow.style.display='';
+      if(fobChk)fobChk.checked=true;
+      var fobCfg=document.getElementById('cfg-fob');
+      if(fobCfg)fobCfg.classList.add('show');
+    } else {
+      fobRow.style.display='none';
+      if(fobChk)fobChk.checked=false;
+    }
+  }
+  lu();
+}
+function selectTheft(t){
+  theftType=t;
+  ['a','b','c'].forEach(function(x){
+    document.getElementById('th-'+x).classList.toggle('sel',x===t);
+    document.getElementById('cfg-th-'+x).classList.toggle('show',x===t);
+  });
+  lu();
+}
+function toggleIntermediate(){document.getElementById('cfg-intermediate').classList.toggle('show',document.getElementById('hasIntermediate').checked);lu();}
+function toggleFob(){document.getElementById('cfg-fob').classList.toggle('show',document.getElementById('fobKeys').checked);lu();}
+function toggleLighting(){document.getElementById('cfg-lighting').classList.toggle('show',document.getElementById('hasLighting').checked);lu();}
+
+// ─── TIERS ──────────────────────────────────────────────────────────
+function renderTiers(){
+  document.getElementById('tier-rows').innerHTML=tiers.map(function(t,i){
+    return '<div class="tier-row"><span style="font-size:12px;color:#888">Tier '+(i+1)+'</span>'
+    +'<input type="number" value="'+t.from+'" min="0" step="500" onchange="tiers['+i+'].from=+this.value;lu()" placeholder="From">'
+    +'<input type="number" value="'+(t.to!==null?t.to:'')+'" min="0" step="500" onchange="tiers['+i+'].to=this.value===\'\'?null:+this.value;lu()" placeholder="'+(t.to===null?'(above)':'To')+'">'
+    +'<input type="number" value="'+t.pct+'" min="0" max="100" step="0.5" onchange="tiers['+i+'].pct=+this.value;lu()">'
+    +'<span class="rm" onclick="removeTier('+i+')">&#215;</span></div>';
+  }).join('');
+}
+function addTier(){tiers.push({from:0,to:null,pct:0});renderTiers();lu();}
+function removeTier(i){if(tiers.length>1){tiers.splice(i,1);renderTiers();lu();}}
+
+// ─── INVOICE ────────────────────────────────────────────────────────
+var dragSrcIdx=null;
+function renderInvoice(){
+  var c=document.getElementById('inv-rows');if(!c)return;
+  c.innerHTML=invRows.map(function(r,i){
+    return '<div class="inv-row" draggable="true" data-i="'+i+'" '
+    +'ondragstart="dragSrcIdx='+i+';this.style.opacity=\'0.4\'" '
+    +'ondragend="this.style.opacity=\'1\'" '
+    +'ondragover="event.preventDefault();this.style.borderTop=\'2px solid #1a1a1a\'" '
+    +'ondragleave="this.style.borderTop=\'\'" '
+    +'ondrop="event.preventDefault();this.style.borderTop=\'\';dropInvRow('+i+')" '
+    +'style="cursor:grab;grid-template-columns:18px 1fr 70px 110px 110px 28px">'
+    +'<span style="color:#bbb;font-size:15px;cursor:grab;user-select:none;text-align:center;line-height:1">&#8286;&#8286;</span>'
+    +'<input type="text" value="'+esc(r.desc)+'" placeholder="Description..." oninput="invRows['+i+'].desc=this.value;calcInv()">'
+    +'<input type="number" id="inv-qty-'+i+'" value="'+r.qty+'" min="1" step="1" oninput="invRows['+i+'].qty=+this.value||1;calcInv()">'
+    +'<input type="number" id="inv-unit-'+i+'" value="'+r.unit+'" min="0" step="0.01" oninput="invRows['+i+'].unit=+this.value||0;calcInv()">'
+    +'<input type="number" id="inv-line-'+i+'" value="'+(r.qty*r.unit).toFixed(2)+'" readonly style="background:#f5f5f2">'
+    +'<span class="rm" onclick="removeInvRow('+i+')" title="Remove">&#215;</span></div>';
+  }).join('');
+  var hdr=document.getElementById('inv-hdr');
+  if(hdr)hdr.style.gridTemplateColumns='18px 1fr 70px 110px 110px 28px';
+  calcInv();
+}
+function dropInvRow(toIdx){
+  if(dragSrcIdx===null||dragSrcIdx===toIdx)return;
+  var moved=invRows.splice(dragSrcIdx,1)[0];
+  invRows.splice(toIdx,0,moved);
+  dragSrcIdx=null;
+  renderInvoice();
+}
+function addInvRow(){invRows.push({desc:'',qty:1,unit:0});renderInvoice();}
+function removeInvRow(i){if(invRows.length>1){invRows.splice(i,1);renderInvoice();}}
+function calcInv(){
+  var total=0;
+  invRows.forEach(function(r,i){
+    var line=r.qty*r.unit;
+    total+=line;
+    var el=document.getElementById('inv-line-'+i);
+    if(el)el.value=line.toFixed(2);
+  });
+  var el=document.getElementById('inv-grand-total');
+  if(el)el.textContent='$'+fm(total);
+}
+function esc(s){return(s||'').replace(/"/g,'&quot;');}
+function syncPct2(){
+  var p1=Math.min(99,Math.max(1,parseInt(v('ebPct1'))||70));
+  var p2=100-p1;
+  var el=document.getElementById('ebPct2');
+  if(el)el.value=p2;
+}
+
+// ─── HELPERS ────────────────────────────────────────────────────────
+function v(id){var el=document.getElementById(id);return el?el.value:'';}
+function cb(id){var el=document.getElementById(id);return el?el.checked:false;}
+function fm(n){return(+n||0).toLocaleString('en-US',{minimumFractionDigits:2});}
+function numWord(n){
+  var map={15:'fifteen',20:'twenty',30:'thirty',45:'forty-five',60:'sixty',75:'seventy-five',90:'ninety',100:'one hundred',120:'one hundred twenty',150:'one hundred fifty',180:'one hundred eighty',365:'three hundred sixty-five'};
+  var d=parseInt(n)||90;
+  return (map[d]||n)+' ('+d+')';
+}
+function fw(n){var m={1000:'One Thousand',2000:'Two Thousand',3000:'Three Thousand',4000:'Four Thousand',5000:'Five Thousand',6000:'Six Thousand',7000:'Seven Thousand',8000:'Eight Thousand',9000:'Nine Thousand',10000:'Ten Thousand'};return(m[+n]||(+n).toLocaleString())+' Dollars';}
+function set(id,txt){var el=document.getElementById(id);if(el)el.textContent=txt;}
+
+// ─── CLAUSE BUILDERS ────────────────────────────────────────────────
+function buildPreamble(){
+  return 'This VENDOR LICENSE AGREEMENT (this "Agreement"), dated as of '+(v('effectiveDate')||'[INSERT DATE]')+' (the "Effective Date"), is entered into by and between Quicky Markets LLC, a Florida limited liability company with its principal place of business at 16385 Biscayne Blvd, CU-1, North Miami Beach, Florida 33160 (the "Vendor"), and '+(v('clientName')||'[CLIENT ENTITY NAME]')+', a '+(v('clientState')||'Florida')+' limited liability company whose mailing address is '+(v('clientMailAddr')||'[CLIENT MAILING ADDRESS]')+' (the "Client"). The Vendor and the Client are referred to herein individually as a "Party" and collectively as the "Parties."';
+}
+
+function buildNotice(){
+  var na=v('noticeAddr')||v('clientMailAddr')||'[ADDRESS]';
+  var ce=v('contactEmail');
+  return 'Notices to the Client:\n'+(v('clientName')||'[CLIENT ENTITY NAME]')+'\nAttention: '+(v('contactName')||'[CONTACT NAME]')+', '+(v('contactTitle')||'[TITLE]')+'\n'+na+(ce?'\nEmail: '+ce:'');
+}
+
+function buildSig(){
+  return (v('clientName')||'[CLIENT ENTITY NAME]')+'\na '+(v('clientState')||'Florida')+' limited liability company\n\nBy: '+(v('managerEntity')||'[MANAGER ENTITY]')+'\nIts: '+(v('managerRole')||'Manager')+'\n\nBy: _________________________\nName: '+(v('sigName')||'[SIGNATORY NAME]')+'\nTitle: '+(v('sigTitle')||'Authorized signer');
+}
+
+function buildFeeText(){
+  var nu=v('numUnits')||'[NUMBER]';
+  var ded='For purposes of this Agreement, "Net Collected Revenue" means gross revenues generated from the Market Location, less: (a) all sales tax collected and remitted to applicable governmental authorities; and (b) all credit and debit card processing fees charged by the Vendor\'s payment processor, currently assessed at 2.59% of each transaction amount plus $0.15 per transaction. Both represent amounts that pass through to third parties and are never retained by the Vendor. The Fee shall be applied to Net Collected Revenue only. The processing fee rate may be adjusted to reflect actual processor charges upon thirty (30) days\' prior written notice supported by processor documentation.';
+  if(feeType==='nofee'){
+    return 'Vendor shall not be required to pay any license fee or additional monetary consideration to the Client for the rights granted under this Agreement. The Client acknowledges that (i) the Vendor\'s obligations to install, operate, maintain, and stock the Market at its sole cost and expense, and (ii) the provision of a convenient food and beverage service for the benefit of the Client\'s residents and tenants, collectively constitute adequate and sufficient consideration. The Vendor shall retain all revenues generated from the Market. No further payment shall be due from the Vendor to the Client.';
+  } else if(feeType==='fixed-pct'){
+    var pct=v('fixedPct')||'10'; var basis=v('fixedBasis')||'quarterly';
+    return 'In consideration for the rights granted under this Agreement, the Vendor shall pay the Client a license fee equal to '+pct+'% of Net Collected Revenue generated from the Market Location on a '+basis+' basis (the "Fee"). '+ded+' Payment shall be made quarterly within fifteen (15) days following the end of each calendar quarter. The Fee structure shall remain fixed throughout the term unless otherwise mutually agreed in writing.';
+  } else if(feeType==='tiered'){
+    var cap=+(v('tierCap')||0);
+    var alpha=['i','ii','iii','iv','v','vi'];
+    var tl=tiers.map(function(t,i){
+      if(i===0&&t.pct===0)return '('+alpha[i]+') if quarterly Net Collected Revenue is less than $'+(t.to||0).toLocaleString()+', the rate shall be 0%';
+      if(t.to===null)return '('+alpha[i]+') if quarterly Net Collected Revenue exceeds $'+t.from.toLocaleString()+', the rate shall be '+t.pct+'%';
+      return '('+alpha[i]+') if quarterly Net Collected Revenue is between $'+t.from.toLocaleString()+' and $'+t.to.toLocaleString()+', the rate shall be '+t.pct+'%';
+    }).join('; ');
+    var capT=cap>0?'\n\nNotwithstanding the foregoing, the aggregate Fee shall not exceed $'+cap.toLocaleString()+' per calendar month ($'+(cap*3).toLocaleString()+' per quarter), prorated for partial months.':'';
+    return 'In consideration for the rights granted under this Agreement, the Vendor shall pay the Client a tiered profit-sharing fee based on quarterly Net Collected Revenue (the "Fee"), as follows: '+tl+'. '+ded+capT+'\n\nPayment shall be made quarterly within fifteen (15) days following the end of each calendar quarter. The Fee structure shall remain fixed throughout the term unless otherwise mutually agreed in writing.';
+  } else {
+    var pct2=v('greaterPct')||'10'; var pu=parseFloat(v('greaterPerUnit')||'1'); var tot=(pu*(+nu||0)).toFixed(2);
+    return 'In consideration for the rights granted under this Agreement, the Vendor shall pay the Client a monthly license fee equal to the greater of: (i) '+pct2+'% of Net Collected Revenue; or (ii) a fixed fee of $'+pu.toFixed(2)+' per residential unit, totaling $'+tot+'/month based on '+nu+' units (the "Fee"). '+ded+'\n\nThe Net Collected Revenue deductions apply only to prong (i); the per-unit fixed amount under prong (ii) is not reduced. Payment shall be made quarterly within fifteen (15) days following the end of each calendar quarter. The Fee structure shall remain fixed throughout the term unless otherwise mutually agreed in writing.';
+  }
+}
+
+function buildTerm(){
+  var yrs=parseInt(v('termYears')||'5');
+  var ren=v('termRenewal')||'auto5';
+  var yrsWord=yrs===1?'one (1)':yrs===2?'two (2)':yrs===3?'three (3)':yrs===4?'four (4)':yrs===5?'five (5)':yrs===7?'seven (7)':yrs===10?'ten (10)':yrs+' ('+yrs+')';
+  var base='This Agreement shall be effective for an initial term of '+yrsWord+' calendar year'+(yrs===1?'':' s')+' from the Effective Date (the "Initial Term"), subject to Section 3.2.';
+  if(ren==='auto5')return base+' Following the Initial Term, this Agreement shall automatically renew for successive terms of equal length, provided that both parties mutually agree in writing no later than sixty (60) days prior to the expiration of the then-current term.';
+  if(ren==='auto1')return base+' Following the Initial Term, this Agreement shall automatically renew for successive one (1) calendar year periods unless either party provides written notice of non-renewal no later than sixty (60) days prior to the expiration of the then-current term.';
+  if(ren==='mtm')return base+' Following the Initial Term, this Agreement shall continue on a month-to-month basis until terminated by either party upon '+numWord(v('postTermDays')||'90')+' days\' prior written notice.';
+  return base+' Following the Initial Term, this Agreement may be renewed for one (1) additional calendar year, provided that both parties mutually agree in writing no later than sixty (60) days prior to the expiration of the Initial Term.';
+}
+
+function buildTermination(){
+  var cure=v('termNoticeDays')||'90';
+  var post=v('postTermDays')||'90';
+  var ren=v('termRenewal')||'auto5';
+  var t='During the Initial Term, either party may terminate this Agreement only upon the other party\'s material breach of any covenant or provision hereof, provided that the breaching party fails to cure such breach within '+numWord(cure)+' days following receipt of written notice specifying the nature of the breach. Termination during the Initial Term is available solely as a remedy for an uncured material breach — it is not available for convenience or without cause.';
+
+  // Post-Initial Term termination language depends on the renewal type
+  if(ren==='mtm'){
+    // Month-to-month: either party can exit on notice — this mirrors buildTerm
+    t+=' Following the Initial Term, this Agreement continues on a month-to-month basis and either party may terminate for any reason upon '+numWord(post)+' days\' prior written notice to the other party.';
+  } else if(ren==='auto5'||ren==='auto1'){
+    // Auto-renew: either party exits by providing non-renewal notice within the window
+    t+=' Following the Initial Term, either party may terminate this Agreement by providing written notice of non-renewal no later than sixty (60) days prior to the expiration of the then-current term, in accordance with Section 3.1.';
+  } else {
+    // Mutual agreement renewal: either party simply does not agree to renew
+    t+=' Following the Initial Term, this Agreement shall expire at the end of the then-current term unless both parties mutually agree in writing to renew, in accordance with Section 3.1. Either party may allow the Agreement to expire without cause by declining to renew.';
+  }
+
+  if(cb('propSaleTerm'))t+=' Notwithstanding the foregoing, during the Initial Term, the Client shall have the right to terminate this Agreement upon sixty (60) days\' prior written notice in the event the Client enters into a binding contract for the sale of the Property or the transfer of a majority of its membership interests to a third party.';
+  return t;
+}
+
+function buildET(){
+  if(etType==='furniture'){
+    var yr1=cb('et365');
+    return 'In the event the Client elects to terminate this Agreement prior to the expiration of the '+(yr1?'first year (365 calendar days) of the ':'')+'Initial Term, the Client shall reimburse the Vendor for: (i) all costs incurred by the Vendor in connection with the procurement and installation of furniture for the Market Location, including shipping and installation charges; and (ii) all costs associated with the removal and transportation of the Vendor\'s furniture and equipment from the Property to a location designated by the Vendor within one hundred (100) miles of the Property. The Vendor shall provide reasonable documentation of such costs upon request. The applicable cost schedule is set forth in Exhibit B.';
+  } else if(etType==='flatfee'){
+    var amt=v('etFlatAmt')||'5000';
+    return 'In the event the Client elects to terminate this Agreement prior to the expiration of the Initial Term, the Client shall pay the Vendor a one-time early termination fee of '+fw(+amt)+' ($'+fm(+amt)+') (the "Termination Fee"), which compensates the Vendor for time invested in the store buildout, contractor coordination, and operational setup. The Termination Fee shall be due within fifteen (15) days of the effective termination date and constitutes a reasonable estimate of the Vendor\'s costs, not a penalty.';
+  }
+  return 'In the event of termination pursuant to Section 3.2, no additional financial obligations shall arise beyond those accrued as of the effective termination date.';
+}
+
+function buildBuildout(){
+  if(buildoutType==='vendor'){
+    var custom=cb('customFurniture');
+    return 'The Vendor shall be solely responsible for the selection, design, procurement, and installation of all furniture, refrigeration units, equipment, and fixtures for the Market Location (collectively, the "Market Assets"). The Vendor shall make commercially reasonable efforts to align the aesthetic design of the Market with the overall look, feel, and visual identity of the Property; however, the Vendor retains final authority over all design decisions, including form, layout, materials, and finish. The Client\'s participation in the design process shall be limited to the approval or selection of the color palette for the furniture and fixtures.'+(cb('furnitureApproval')?' Prior to commencing manufacturing, the Vendor shall submit a design proposal to the Client for written approval, which approval shall not be unreasonably withheld or delayed and shall be deemed given if the Client fails to respond in writing within ten (10) business days of receipt. The Vendor shall not commence manufacturing until such written approval is received or deemed given.':'')+' All Market Assets are and shall remain the property of the Vendor throughout the term of this Agreement. The Client acknowledges that the Market Assets are highly customized to the Property. Upon termination of this Agreement, the Vendor shall have sole discretion to determine whether to remove or leave behind the furniture and fixtures at the Property; provided, however, that all equipment, refrigeration units, and point-of-sale systems shall be removed by the Vendor at its sole cost and expense.'+(custom?'\n\nThe Client has requested specific modifications or customizations to the Vendor\'s standard furniture design. Any incremental costs resulting from such custom requests shall be borne solely by the Client and agreed upon in writing prior to procurement.':'');
+  } else {
+    return 'The Client shall be responsible for funding the full buildout of the Market Location, including all furniture, refrigeration units, equipment, and fixtures (collectively, the "Market Assets"). Upon completion of installation, physical ownership of the Market Assets shall vest in the Client. Notwithstanding the foregoing, the Vendor\'s point-of-sale ("POS") hardware, software, and all related technology infrastructure shall at all times remain the property of the Vendor or its designated POS provider, regardless of who funded the acquisition. In the event this Agreement terminates for any reason, the POS hardware shall be returned to the Vendor or its designated POS provider within fifteen (15) days of the effective termination date. The Client shall not use, lease, or permit any third party to operate the Market Assets with any vendor other than Quicky Markets LLC during the term of this Agreement, except in the event of an uncured material breach by the Vendor as defined in Section 3.2. All sales data, customer data, inventory data, analytics, and reports generated through the Vendor\'s systems are and shall remain the exclusive property of the Vendor. The Vendor may share summary operational reports with the Client upon request but shall not be required to disclose detailed item-level transaction data, customer information, or proprietary database contents.';
+  }
+}
+
+function buildLighting(){
+  if(!cb('hasLighting'))return 'The Client has elected not to include integrated lighting in the Market furniture and fixtures. No lighting components shall be installed as part of the Market buildout and no lighting-related costs or obligations shall arise under this Agreement.';
+  var lpUp=document.getElementById('lp-upfront')&&document.getElementById('lp-upfront').checked;
+  var lc=parseFloat(v('lightingCost')||0);
+  var lcStr=lc>0?'$'+fm(lc):'[LIGHTING COST TO BE DETERMINED]';
+  var pay=lpUp
+    ?'The Client shall pay the full lighting cost of '+lcStr+' to the Vendor prior to or at the time of installation.'
+    :'The cost of the integrated lighting, in the amount of '+lcStr+', shall be recovered by the Vendor through equal installments deducted from the fee payments otherwise owed to the Client under Section 2.2, until the balance is fully recovered. In the event this Agreement terminates before the balance is fully recovered, the outstanding amount shall become immediately due and payable by the Client within thirty (30) days of the effective termination date.';
+  return 'The Client has elected to include integrated LED lighting within the Market furniture and fixtures (the "Lighting Upgrade").\n\n(a) Cost and Payment. The total cost of the Lighting Upgrade is '+lcStr+'. '+pay+'\n\n(b) Lifespan and Replacement. The Client acknowledges that the integrated LED lighting is built directly into the Market furniture and fixtures, which are in turn built into the Market space. Integrated LED lighting systems typically have an operational lifespan of between twenty thousand (20,000) and fifty thousand (50,000) hours of use. In the event any lighting components fail, burn out, or otherwise require replacement at any time during or after the initial lifespan period, the Client shall bear the full cost of all replacement and restoration work. The Client further acknowledges that because the lighting is integrated into the furniture structure, any replacement or repair requires the partial disassembly and subsequent reinstallation of the affected furniture components, the cost of which shall also be borne exclusively by the Client.\n\n(c) Vendor Coordination, No Liability. Quicky Markets shall coordinate and oversee any lighting repair or replacement work, including sourcing a qualified carpenter and electrician to perform such work and ensuring the successful completion thereof. All associated labor, materials, and coordination costs shall be invoiced to and paid by the Client within thirty (30) days of invoice. Quicky Markets\' role is limited to coordination and oversight. Quicky Markets is not liable for the repair, replacement, or ongoing maintenance of the lighting system, and makes no warranty, express or implied, regarding the performance or longevity of the Lighting Upgrade beyond the initial installation.';
+}
+
+function buildTheft(){
+  var acChangeClause=' In the event the Property\'s access control system is removed, disabled, or downgraded such that individual market entry can no longer be traced to a specific unit or responsible party, the Client\'s financial liability for theft shall automatically shift to the no-traceable-access structure from that date forward, under which the Client assumes full financial responsibility for all Theft Losses. The Client shall notify the Vendor in writing within five (5) business days of any material change to the access control system. Failure to provide such notice shall constitute a material breach of this Agreement.';
+  if(accessType==='no'){
+    return '2.3 Theft Liability and Camera Access.\n\nBecause the Property does not have an access control system capable of linking market entry to a specific unit or responsible individual, the Client assumes full financial responsibility for all theft at the Market Location. The Vendor shall provide the Client with a permanent shared access link to the Market\'s camera system. The Client may create its own account and view live and recorded footage at any time at no cost. The Vendor makes no warranty as to footage retention duration, as storage depends on activity volume at the location. The Vendor shall provide quarterly inventory reconciliation reports. Any unexplained discrepancy constitutes the Theft Loss at the Vendor\'s wholesale purchase price. The Vendor bears no obligation to identify perpetrators or generate incident reports.\n\nThe Client\'s management team shall forward the Vendor\'s theft notices to the identified resident and include written warnings of potential reporting to local authorities, non-renewal of lease, and eviction as permitted under Florida law, within five (5) business days of receipt. The Client is not required to follow through on such actions. The Theft Loss shall be deducted from any revenue share or fee owed by the Vendor to the Client for that quarter. If the Theft Loss exceeds the amount owed, the Client shall pay the remaining balance to the Vendor within fifteen (15) days of the quarterly report.'+acChangeClause;
+  }
+  var fa=v('fineAmt')||'250'; var fac=v('fineAmtC')||'250';
+  var fs=cb('fineSplit'); var fsc=cb('fineSplitC');
+  var u1=v('unintentional1');
+  if(theftType==='a'){
+    return '2.3 Theft Tracking and Camera Access.\n\nThe Vendor shall provide the Client with a permanent shared access link to the Market\'s camera system. The Client may view live and recorded footage at any time. The Vendor makes no warranty as to footage retention duration. The Vendor shall provide quarterly inventory reconciliation reports. Any unexplained discrepancy constitutes the documented Theft Loss at the Vendor\'s wholesale purchase price. The Vendor absorbs all Theft Losses under this option.\n\n2.4 Client Communication Obligation.\n\nWithin five (5) business days of receiving a theft report from the Vendor, the Client\'s management team shall: (i) forward the Vendor\'s written notice to the identified resident; (ii) include written warnings of potential reporting to local law enforcement, non-renewal of lease, and eviction proceedings as permitted under Florida law; and (iii) confirm in writing to the Vendor what communications were sent and on what date. The Client is not required to follow through on such actions. Failure to forward communications and confirm delivery within the required period shall constitute a breach of this Agreement subject to the cure provisions of Section 3.2.'+acChangeClause;
+  } else if(theftType==='b'){
+    var noFeeClause=feeType==='nofee'?'the Client shall pay the full wholesale cost of stolen items directly to the Vendor within fifteen (15) days':'the full wholesale cost of stolen items shall be owed by the Client regardless of the applicable fee structure';
+    var noFeeClauseC=feeType==='nofee'?'the Client shall pay the full wholesale cost of the Theft Loss directly to the Vendor within fifteen (15) days':'the full wholesale cost of the Theft Loss shall be owed by the Client regardless of the applicable fee structure';
+    var fineRule=u1==='warning'?'(a) Unintentional theft — first offense: written warning. Any subsequent offense shall result in a fine of $'+fa+'. (b) Intentional theft: if the first offense is reasonably determined to be intentional based on video evidence, a fine of $'+fa+' shall be imposed immediately without prior warning.':'A fine of $'+fa+' shall be imposed for each theft offense.';
+    return '2.3 Theft Tracking and Camera Access.\n\nThe Vendor shall provide the Client with a permanent shared access link to the Market\'s camera system. The Client may view live and recorded footage at any time. The Vendor makes no warranty as to footage retention duration. The Vendor shall provide quarterly inventory reconciliation reports. Any unexplained discrepancy constitutes the Theft Loss at the Vendor\'s wholesale purchase price.\n\n2.4 Fine Enforcement.\n\nUpon receiving a theft report, the Client\'s management team shall forward it to the identified resident within five (5) business days and impose fines through the building\'s lease enforcement system as follows: '+fineRule+' The fine amount shall represent the sum of the fine penalty plus the retail selling price of the stolen items at the time of the incident. All resident communications shall include written references to potential reporting to local law enforcement, non-renewal of lease, and eviction as permitted under Florida law. The Client is not required to follow through on such actions.\n\n2.5 Application of Fine Proceeds and Theft Deduction.\n\nFine proceeds shall be applied first to offset the Theft Loss. If fine proceeds fully cover the Theft Loss, no deduction shall be made. If fine proceeds partially cover the Theft Loss, the remaining balance shall be deducted from the Client\'s quarterly fee payment, capped at the fee owed for that quarter. '+(fs?'If fine proceeds exceed the Theft Loss, the surplus shall be divided equally (50/50) between the Vendor and the Client. ':'')+'If the Client fails to enforce fines or forward communications as required, '+noFeeClause+'.'+acChangeClause;
+  } else {
+    var noFeeClauseC=feeType==='nofee'?'the Client shall pay the full wholesale cost of the Theft Loss directly to the Vendor within fifteen (15) days of the quarterly report':'the full wholesale cost of the Theft Loss shall be owed by the Client regardless of the applicable fee structure';
+    return '2.3 Theft Tracking and Camera Access.\n\nThe Vendor shall provide the Client with a permanent shared access link to the Market\'s camera system. The Client may view live and recorded footage at any time. The Vendor makes no warranty as to footage retention duration. The Vendor shall provide quarterly inventory reconciliation reports. Any unexplained discrepancy constitutes the Theft Loss at the Vendor\'s wholesale purchase price.\n\n2.4 Vendor-Led Fine Enforcement.\n\nThe Vendor retains exclusive authority to impose and communicate all fines arising from theft at the Market Location. The Vendor may independently report incidents to local law enforcement. Upon notifying the Client of a theft incident, the Client\'s management team shall, within five (5) business days: (i) forward the Vendor\'s written notice to the identified resident; (ii) issue written warnings of potential non-renewal of lease and initiation of eviction proceedings as permitted under Florida law; and (iii) confirm in writing to the Vendor what actions were taken. The Client is not required to follow through on such actions. Fine proceeds shall be applied first to offset the Theft Loss. '+(fsc?'Any surplus proceeds shall be divided equally (50/50) between the parties. ':'')+'If the Client fulfills its communication obligations in good faith but the resident fails to pay, the Theft Loss shall be deducted from the Client\'s quarterly fee payment only, and the Vendor absorbs any amount in excess of such payment. If the Client fails to fulfill its communication obligations within the required period, '+noFeeClauseC+'.'+acChangeClause;
+  }
+}
+
+function buildInstallText(){
+  var d=v('installDays')||'90';
+  var hasFurnApproval=cb('furnitureApproval');
+  var trigger=hasFurnApproval
+    ?'The Client shall notify the Vendor in writing once the Market Location has been fully prepared and is ready for the Vendor to access for the purpose of taking measurements (the "Space Ready Date"). Prior to commencing manufacturing of the furniture and fixtures, the Vendor shall submit a design proposal to the Client for written approval, which approval shall not be unreasonably withheld or delayed. The Vendor\'s obligation to complete installation and the start of the Installation Period shall be triggered by the date the Client provides written approval of the furniture design (the "Design Approval Date"), and not by the Space Ready Date or the Effective Date of this Agreement.'
+    :'The Client shall notify the Vendor in writing once the Market Location has been fully prepared and is ready for the Vendor to access for the purpose of taking measurements and commencing the buildout process (the "Space Ready Date"). The Vendor\'s obligation to complete installation shall be triggered solely by the Space Ready Date and not by the Effective Date of this Agreement.';
+  return trigger+' From and after the '+(hasFurnApproval?'Design Approval Date':'Space Ready Date')+', the Vendor shall have '+numWord(d)+' calendar days to complete the full installation of the Market, including all furniture, equipment, fixtures, and point-of-sale systems (the "Installation Period"). The Client shall grant the Vendor reasonable access to the Market Location during regular business hours throughout the Installation Period and shall ensure the space remains available and unobstructed for the duration of such work. The Vendor shall use commercially reasonable efforts to complete installation within the Installation Period; provided that any delays caused by the Client, third-party contractors, permitting authorities, or circumstances beyond the Vendor\'s reasonable control shall extend the Installation Period by an equivalent number of days.';
+}
+
+function buildEquipment(){
+  var parts=[];
+  if(cb('newEquipment'))parts.push('All equipment brought onto the Property by the Vendor must be new.');
+  if(cb('ventilation'))parts.push('The Client shall ensure proper ventilation and hot air extraction systems are in place to support the Vendor\'s refrigeration equipment.');
+  if(cb('fobKeys'))parts.push('The Client shall provide the Vendor with '+(v('fobCount')||'4')+' individual access control FOB key(s). Lost or damaged keys shall be replaced at the Vendor\'s expense at no markup from the Client.');
+  if(cb('readySpace'))parts.push('The Client shall deliver the Market Location fully prepared for operations. The Vendor need only install its point-of-sale equipment and merchandise to commence operations.');
+  if(cb('coffeeMachine'))parts.push('The Client may retain a single existing coffee machine for residents and shall not install additional coffee machines, vending machines, automated dispensers, or ATMs at the Property during the term of this Agreement.');
+  return parts.length?parts.join('\n\n'):'No additional equipment clauses selected.';
+}
+
+function buildMaintenance(){
+  var t='The Client shall be responsible for providing the Market Location with utilities (HVAC, water, and electricity) and for ensuring the Market space is cleaned and maintained to a standard consistent with the Property\'s other common area amenities — including floor cleaning, trash removal, and general upkeep — no less frequently than every other day, with daily cleaning being the expected standard. The Vendor shall be responsible for the maintenance and upkeep of its own equipment, refrigeration units, point-of-sale systems, and millwork. The Market shall be open and accessible to the building\'s residents and tenants on a full-time basis.';
+  if(cb('clientFurnitureRepair'))t+=' The Client shall also be responsible for the repair and replacement of furniture and appliances within the Market Location, including any custom fixtures procured at the Client\'s request.';
+  return t;
+}
+
+function buildAlcohol(){
+  if(!cb('alcoholConsent'))return '[Alcohol consent clause not included.]';
+  return 'In the event the Vendor wishes to introduce alcoholic beverages for sale at the Market Location, the Vendor shall first obtain the prior written consent of the Client, which consent may be withheld at the Client\'s sole and absolute discretion. The Vendor shall be solely responsible for obtaining and maintaining all governmental permits, licenses, and approvals required for the lawful sale of alcoholic beverages.';
+}
+
+
+
+function buildFullSig(){
+  var n=v('clientName')||'[CLIENT ENTITY NAME]'; var s=v('clientState')||'Florida';
+  var me=v('managerEntity')||'[MANAGER ENTITY]'; var mr=v('managerRole')||'Manager';
+  var sn=v('sigName')||'[SIGNATORY NAME]'; var st=v('sigTitle')||'Authorized signer';
+  var b='THE VENDOR:\n\nQuicky Markets LLC\nA Florida Limited Liability Company\n\nBy: _________________________\nName: Eduardo Machado\nTitle: Owner\nDate: ___________________\n\n\nTHE CLIENT:\n\n'+n+'\nA '+s+' Limited Liability Company\n\n';
+  if(cb('hasIntermediate')&&v('intEntityName')){b+='By: '+v('intEntityName')+', its Manager\n';if(v('int2EntityName'))b+='By: '+v('int2EntityName')+', its Manager\n';}
+  else{b+='By: '+me+'\nIts: '+mr+'\n';}
+  b+='\nBy: _________________________\nName: '+sn+'\nTitle: '+st+'\nDate: ___________________';
+  return b;
+}
+
+function buildCustomNotes(){
+  var t=v('customNotes');
+  if(!t||!t.trim())return 'Type above to see how the clause will appear in the contract.';
+  return 'ADDITIONAL PROVISIONS\n\n'+t.trim();
+}
+
+// ─── MASTER LIVE UPDATE ─────────────────────────────────────────────
+function lu(){
+  set('prev-preamble',buildPreamble());
+  set('prev-notice',buildNotice());
+  set('prev-sig',buildSig());
+  set('prev-fee',buildFeeText());
+  set('prev-term',buildTerm());
+  // Show/hide post-term notice field — only relevant for month-to-month
+  var isMtm=(v('termRenewal')||'auto5')==='mtm';
+  var ptEl=document.getElementById('postTermDays');
+  var ptNote=document.getElementById('postTermNote');
+  if(ptEl){ptEl.parentElement.style.opacity=isMtm?'1':'0.4';ptEl.disabled=!isMtm;}
+  if(ptNote){ptNote.textContent=isMtm?'After the Initial Term, either party can exit for any reason with this many days notice.':'Not applicable — post-term exit is handled via non-renewal notice under the selected renewal type.';}
+  set('prev-termination',buildTermination());
+  set('prev-et',buildET());
+  set('prev-buildout',buildoutType==='vendor'?buildBuildout():buildBuildout());
+  set('prev-lighting',buildLighting());
+  set('prev-theft',buildTheft());
+  set('prev-install',buildInstallText());
+  set('prev-install-approval',buildInstallText());
+  set('prev-buildout-approval',buildoutType==='vendor'?buildBuildout():'[Buildout §4.5 — only applies when Vendor pays for buildout]');
+  set('prev-equipment',buildEquipment());
+  set('prev-maintenance',buildMaintenance());
+  set('prev-alcohol',buildAlcohol());
+  set('prev-fullsig',buildFullSig());
+  set('prev-customNotes',buildCustomNotes());
+}
+
+// ─── EXPORT ─────────────────────────────────────────────────────────
+function buildExportHTML(){
+
+  var cName=v('clientName')||'[CLIENT ENTITY NAME]';
+  var cState=v('clientState')||'Florida';
+  var cMailAddr=v('clientMailAddr')||'[CLIENT MAILING ADDRESS]';
+  var propAddr=v('propAddr')||'[PROPERTY ADDRESS]';
+  var county=v('county')||'Miami-Dade';
+  var eDate=v('effectiveDate')||'[INSERT DATE]';
+  var contactName=v('contactName')||'[CONTACT NAME]';
+  var contactTitle=v('contactTitle')||'[TITLE]';
+  var noticeAddr=v('noticeAddr')||v('clientMailAddr')||'[ADDRESS]';
+  var contactEmail=v('contactEmail')||'';
+  var managerEntity=v('managerEntity')||'[MANAGER ENTITY]';
+  var managerRole=v('managerRole')||'Manager';
+  var sigName=v('sigName')||'[SIGNATORY NAME]';
+  var sigTitle=v('sigTitle')||'Authorized signer';
+  var numUnits=v('numUnits')||'[NUMBER]';
+  var installDays=v('installDays')||'90';
+  var customNotes=v('customNotes');
+  var affiliateAssign=cb('affiliateAssign');
+
+  var feeText=buildFeeText();
+  var termText=buildTerm();
+  var termNoticeText=buildTermination();
+  var etText=buildET();
+  var buildoutText=buildBuildout();
+  var lightingText=buildLighting();
+  var maintText=buildMaintenance();
+
+  var subsidiesText=cb('subsidies')?'At the Client\'s sole option, the Client may subsidize the retail price of specific food and/or beverage items offered at the Market. Any such arrangement shall be memorialized in a separate written agreement negotiated in good faith.':'';
+  var auditText=cb('auditRights')?'Within fifteen (15) days following the end of each calendar quarter, the Vendor shall provide the Client with a summary statement of Net Collected Revenue for that quarter. The Client shall have the right, upon reasonable written notice, to audit the Vendor\'s relevant books and records to verify the accuracy of reported figures. Any underpayment confirmed by audit shall be remitted within ten (10) days of written notice.':'';
+
+  var expiredText='The Vendor shall use commercially reasonable efforts to ensure all products stocked in the Market are within their applicable expiration dates. The parties acknowledge that monitoring expiration dates in an unmanned, self-checkout environment presents operational challenges and that occasional instances may occur despite the Vendor\'s good-faith efforts. In the event the Client or a resident identifies an expired product, the Client shall promptly notify the Vendor and the Vendor shall remove and replace the affected product within a commercially reasonable time. Any potential remedy shall be evaluated on a case-by-case basis. The parties agree to act in good faith in resolving such matters.';
+
+  var insText='The Vendor shall obtain and maintain a commercial general liability insurance policy with minimum limits of One Million Dollars ($1,000,000) per occurrence and Two Million Dollars ($2,000,000) in the aggregate. Coverage shall be expressly limited to: (i) claims arising from the Vendor\'s furniture, fixtures, and millwork installed at the Market Location; (ii) claims arising from the Vendor\'s equipment, refrigeration units, and point-of-sale systems; (iii) claims arising from the Vendor\'s products sold at the Market; and (iv) acts or omissions of the Vendor\'s employees, agents, or contractors while on the Property. The Vendor\'s insurance does not extend to claims arising from the physical structure of the Property, including faulty construction, defective plumbing, or electrical systems, or any incident unrelated to the Vendor\'s operations within the Market Location. The Client bears full responsibility for all such excluded categories. The Vendor shall name the Client as an additional insured solely as to the covered categories, provide a certificate of insurance within ten (10) days of the Effective Date and upon each renewal. This obligation survives termination.';
+
+  var acChangeClause='Notwithstanding any other provision of this Agreement, in the event the Property\'s access control system is removed, disabled, or downgraded such that individual market entry can no longer be traced to a specific unit or responsible party, the Client\'s financial liability for theft shall automatically shift to the no-traceable-access structure from that date forward, under which the Client assumes full financial responsibility for all Theft Losses as set forth in this Section. The Client shall notify the Vendor in writing within five (5) business days of any material change to the access control system. Failure to provide such notice shall constitute a material breach of this Agreement.';
+
+  // Build theft HTML sections
+  var theftHTML=''; var theftSecCount=0;
+  var fa=v('fineAmt')||'250'; var fac=v('fineAmtC')||'250';
+  var fs=cb('fineSplit'); var fsc=cb('fineSplitC'); var u1=v('unintentional1');
+
+  if(accessType==='no'){
+    theftHTML='<p class="sec"><span class="sn">2.3</span> <span class="st">Theft Liability and Camera Access.</span> Because the Property does not have an access control system capable of linking market entry to a specific unit or responsible individual, the Client assumes full financial responsibility for all theft occurring at the Market Location. The Vendor shall provide the Client with a permanent shared access link to the Market&rsquo;s camera surveillance system. The Client may create its own account and view live and recorded footage at any time at no cost. The Vendor makes no warranty as to footage retention duration, as storage capacity depends on activity volume at the location. The Vendor shall provide quarterly inventory reconciliation reports documenting products received versus products sold, from which the Theft Loss shall be calculated at the Vendor&rsquo;s wholesale purchase price. The Vendor bears no obligation to identify perpetrators or generate incident reports. The Client&rsquo;s management team shall forward the Vendor&rsquo;s theft notices to residents and include written warnings of potential reporting to local authorities, non-renewal of lease, and eviction as permitted under applicable Florida law, within five (5) business days of receipt. The Client is not required to follow through on such actions. The Theft Loss for each quarter shall be deducted from any revenue share or license fee owed by the Vendor to the Client for that quarter. If the Theft Loss exceeds the amount owed, the Client shall pay the remaining balance directly to the Vendor within fifteen (15) days of the quarterly report. '+acChangeClause+'</p>';
+    theftSecCount=1;
+  } else if(theftType==='a'){
+    theftHTML='<p class="sec"><span class="sn">2.3</span> <span class="st">Theft Tracking and Camera Access.</span> The Vendor shall provide the Client with a permanent shared access link to the Market&rsquo;s camera surveillance system. The Client may create its own account and view live and recorded footage at any time at no cost. The Vendor makes no warranty as to footage retention duration, as storage depends on local hardware capacity and traffic volume. The Vendor shall provide quarterly inventory reconciliation reports. Any unexplained discrepancy between products received and products sold constitutes the documented Theft Loss at the Vendor&rsquo;s wholesale purchase price. The Vendor absorbs all Theft Losses under this option.</p><p class="sec"><span class="sn">2.4</span> <span class="st">Client Communication Obligation.</span> Within five (5) business days of receiving a theft report from the Vendor, the Client&rsquo;s management team shall: (i) forward the Vendor&rsquo;s written notice to the identified resident or responsible party; (ii) include written communications referencing potential reporting to local law enforcement, non-renewal of the resident&rsquo;s lease, and eviction proceedings as permitted under applicable Florida law; and (iii) confirm in writing to the Vendor what communications were sent and on what date. The Client is not required to follow through on any such actions. Failure to forward communications and confirm delivery within the required period shall constitute a breach of this Agreement subject to the cure provisions of Section 3.2. '+acChangeClause+'</p>';
+    theftSecCount=2;
+  } else if(theftType==='b'){
+    var noFeeExB=feeType==='nofee'?'the Client shall pay the full wholesale cost of stolen items directly to the Vendor within fifteen (15) days of written notice':'the full wholesale cost of stolen items shall be owed by the Client regardless of the applicable fee structure';
+    var noFeeExC=feeType==='nofee'?'the Client shall pay the full wholesale cost of the Theft Loss directly to the Vendor within fifteen (15) days of the quarterly report':'the full wholesale cost of the Theft Loss shall be owed by the Client regardless of the applicable fee structure';
+    var fineRuleB=u1==='warning'?'(a) Unintentional theft &mdash; first offense: written warning. Any subsequent offense shall result in a fine of $'+fa+'. (b) Intentional theft: if the first offense is reasonably determined to be intentional based on video evidence, a fine of $'+fa+' shall be imposed immediately without prior warning.':'A fine of $'+fa+' shall be imposed for each theft offense, intentional or unintentional.';
+    theftHTML='<p class="sec"><span class="sn">2.3</span> <span class="st">Theft Tracking and Camera Access.</span> The Vendor shall provide the Client with a permanent shared access link to the Market&rsquo;s camera surveillance system. The Client may view live and recorded footage at any time. The Vendor makes no warranty as to footage retention duration. The Vendor shall provide quarterly inventory reconciliation reports. Any unexplained discrepancy constitutes the Theft Loss, valued at the Vendor&rsquo;s wholesale purchase price.</p><p class="sec"><span class="sn">2.4</span> <span class="st">Fine Enforcement.</span> Upon receiving a theft report from the Vendor, the Client&rsquo;s management team shall forward the report to the identified resident within five (5) business days and shall impose fines through the building&rsquo;s lease enforcement system as follows: '+fineRuleB+' The fine amount shall represent the sum of the fine penalty plus the retail selling price of the stolen items at the time of the incident. All resident communications shall include written references to potential reporting to local law enforcement, non-renewal of lease, and eviction proceedings as permitted under Florida law. The Client is not required to follow through on such actions.</p><p class="sec"><span class="sn">2.5</span> <span class="st">Application of Fine Proceeds and Theft Deduction.</span> Fine proceeds shall be applied first to offset the Theft Loss. If fine proceeds fully cover the Theft Loss, no deduction shall be made. If fine proceeds partially cover the Theft Loss, the remaining balance shall be deducted from the Client&rsquo;s quarterly fee payment, capped at the fee owed for that quarter. '+(fs?'If fine proceeds exceed the Theft Loss, the surplus shall be divided equally (50/50) between the Vendor and the Client. ':'')+'If the Client fails to enforce fines or forward communications as required, '+noFeeExB+'. '+acChangeClause+'</p>';
+    theftSecCount=3;
+  } else {
+    theftHTML='<p class="sec"><span class="sn">2.3</span> <span class="st">Theft Tracking and Camera Access.</span> The Vendor shall provide the Client with a permanent shared access link to the Market&rsquo;s camera surveillance system. The Client may view live and recorded footage at any time. The Vendor makes no warranty as to footage retention duration. The Vendor shall provide quarterly inventory reconciliation reports. Any unexplained discrepancy constitutes the Theft Loss, valued at the Vendor&rsquo;s wholesale purchase price.</p><p class="sec"><span class="sn">2.4</span> <span class="st">Vendor-Led Fine Enforcement.</span> The Vendor retains exclusive authority to impose and communicate all fines arising from theft at the Market Location. The Vendor may independently report incidents to local law enforcement. Upon notifying the Client of a theft incident, the Client&rsquo;s management team shall, within five (5) business days: (i) forward the Vendor&rsquo;s written notice to the identified resident; (ii) issue written warnings of potential non-renewal of lease and initiation of eviction proceedings as permitted under applicable Florida law; and (iii) confirm in writing to the Vendor what actions were taken. The Client is not required to follow through on such actions. Fine proceeds shall be applied first to offset the Theft Loss. '+(fsc?'Any surplus proceeds shall be divided equally (50/50) between the parties. ':'')+'If the Client fulfills its communication obligations in good faith but the resident fails to pay, the Theft Loss shall be deducted from the Client&rsquo;s quarterly fee payment only, and the Vendor absorbs any amount in excess of such payment. If the Client fails to fulfill its communication obligations within the required period, '+noFeeExC+'. '+acChangeClause+'</p>';
+    theftSecCount=2;
+  }
+
+  var nextSec=2+theftSecCount+1;
+  var subsidiesHTML=subsidiesText?'<p class="sec"><span class="sn">2.'+nextSec+'</span> <span class="st">Subsidies.</span> '+subsidiesText+'</p>':'';
+  nextSec=nextSec+(subsidiesText?1:0);
+  var auditHTML=auditText?'<p class="sec"><span class="sn">2.'+nextSec+'</span> <span class="st">Audit Rights.</span> '+auditText+'</p>':'';
+  var etHTML=etType!=='none'?'<p class="sec"><span class="sn">3.3</span> <span class="st">Early Termination.</span> '+etText+'</p>':'';
+  var duties34=etType!=='none'?'3.4':'3.3';
+  var customNotesHTML=customNotes?'<div class="art">Additional Provisions</div><p class="sec">'+customNotes+'</p>':'';
+
+  // Sig block HTML
+  var sigClientHTML='<p><strong>'+cName+'</strong></p><p>A '+cState+' Limited Liability Company</p>';
+  if(cb('hasIntermediate')&&v('intEntityName')){
+    sigClientHTML+='<p style="margin-top:.4em">By: '+v('intEntityName')+', its Manager</p>';
+    if(v('int2EntityName'))sigClientHTML+='<p>By: '+v('int2EntityName')+', its Manager</p>';
+  } else {
+    sigClientHTML+='<p style="margin-top:.4em">By: '+managerEntity+'</p><p>Its: '+managerRole+'</p>';
+  }
+  sigClientHTML+='<div class="slw"><span class="sfl">Signature</span><span class="sl">&nbsp;</span><p class="sf">Name: '+sigName+'</p><p class="sf">Title: '+sigTitle+'</p><p class="sf">Date: <span style="display:inline-block;width:1.6in;border-bottom:1px solid #000">&nbsp;</span></p></div>';
+
+  // Exhibit B
+  var invTotal=invRows.reduce(function(s,r){return s+r.qty*r.unit;},0);
+  var ebTitleVal=v('ebTitle')||'Furniture Build, Installation & Site Prep — Cost Breakdown';
+  var ebNoteVal=v('ebNote')||'This Exhibit is incorporated into and made a part of the Agreement pursuant to Sections 3.3 and 5.4.';
+  var ebPct1=Math.min(99,Math.max(1,parseInt(v('ebPct1'))||70));
+  var ebPct2=100-ebPct1;
+  var pctWords={10:'ten',15:'fifteen',20:'twenty',25:'twenty-five',30:'thirty',35:'thirty-five',40:'forty',45:'forty-five',50:'fifty',55:'fifty-five',60:'sixty',65:'sixty-five',70:'seventy',75:'seventy-five',80:'eighty',85:'eighty-five',90:'ninety',95:'ninety-five'};
+  var p1w=(pctWords[ebPct1]||ebPct1)+' percent ('+ebPct1+'%)';
+  var p2w=(pctWords[ebPct2]||ebPct2)+' percent ('+ebPct2+'%)';
+  var ebPayT=v('ebPayInstructions')||'';
+  var ebPayI=v('ebPayInstructions')||'';
+  var exhibitBHTML='';
+  if(cb('hasExhibitB')){
+    var rHTML=invRows.filter(function(r){return r.desc.trim()&&(r.qty*r.unit)>0;}).map(function(r){return '<tr><td>'+r.desc+'</td><td class="amt">'+r.qty+'</td><td class="amt">$'+fm(r.unit)+'</td><td class="amt">$'+fm(r.qty*r.unit)+'</td></tr>';}).join('');
+    var ebTypeNote=buildoutType==='client'
+      ?'<p style="margin-bottom:.5em"><strong>Invoice to Client.</strong> This Exhibit constitutes a binding invoice for the Market buildout costs. Payment schedule: '+p1w+' of the total amount is due and payable upon signing of this Agreement; the remaining '+p2w+' is due and payable upon completion of the Market buildout and installation, as confirmed in writing by both parties.</p>'
+      :'<p style="margin-bottom:.5em"><strong>Cost Reference for Early Termination.</strong> This Exhibit is provided for reference only in connection with Section 3.3. No payment from the Client is due unless the Client triggers early termination during the applicable period, in which case the Client shall reimburse the Vendor for the documented costs set forth herein.</p>';
+    exhibitBHTML='<div class="exhibit"><h2 class="exh">Exhibit B</h2><p class="exs">'+ebTitleVal+'</p>'+ebTypeNote+'<p style="margin-bottom:1.5em">'+ebNoteVal+'</p><table class="etbl"><thead><tr><th>Description</th><th class="amt">Qty</th><th class="amt">Unit Price</th><th class="amt">Amount</th></tr></thead><tbody>'+(rHTML||'<tr><td colspan="4" style="color:#888;font-style:italic">[No items entered]</td></tr>')+'</tbody><tfoot><tr><td colspan="3"><strong>Total</strong></td><td class="amt"><strong>$'+fm(invTotal)+'</strong></td></tr></tfoot></table>'+(ebPayT?'<p style="margin-top:1.5em"><strong>Payment Instructions:</strong> '+ebPayT+'</p>':'')+'</div>';
+  }
+
+  var equipLines=[];
+  if(cb('newEquipment'))equipLines.push('All equipment brought onto the Property by the Vendor must be new.');
+  if(cb('ventilation'))equipLines.push('The Client shall ensure proper ventilation and hot air extraction systems are in place to support the Vendor&rsquo;s refrigeration equipment.');
+  if(cb('fobKeys'))equipLines.push('The Client shall provide the Vendor with '+(v('fobCount')||'4')+' individual access control FOB key(s). Lost or damaged keys shall be replaced at the Vendor&rsquo;s expense at no markup from the Client.');
+  if(cb('coffeeMachine'))equipLines.push('The Client may retain a single existing coffee machine for the use of its residents and shall not install additional coffee machines, automated dispensers, vending machines, or ATMs at the Property during the term of this Agreement.');
+  var equipExtra=equipLines.join(' ');
+  var readyExtra=cb('readySpace')?' The Client shall deliver the Market Location fully prepared for operations, such that the Vendor need only install its point-of-sale equipment and merchandise to commence operations.':'';
+  var alcoholExtra=cb('alcoholConsent')?' In the event the Vendor wishes to introduce alcoholic beverages for sale at the Market Location, the Vendor shall first obtain the prior written consent of the Client, which consent may be withheld at the Client&rsquo;s sole and absolute discretion. The Vendor shall be solely responsible for obtaining and maintaining all governmental permits, licenses, and approvals required for the lawful sale of alcoholic beverages.':'';
+
+  var css='*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;font-size:11.5pt;line-height:1.75;color:#000;background:#fff;margin:0;padding:0}@page{size:letter portrait;margin:1in}.cover-page{width:6.5in;margin:0 auto;min-height:9in;display:flex;flex-direction:column}.cover-logo{text-align:center;margin-bottom:.5in}.cover-logo img{height:52px}.cover-rule{border:none;border-top:2.5px solid #1a1a1a;margin:0 0 .4in}.title-block{text-align:center;margin-bottom:.6in}.title-block h1{font-size:20pt;font-weight:bold;text-transform:uppercase;letter-spacing:.14em;margin:0 0 .2em}.tbr{border:none;border-top:2px solid #1a1a1a;width:3in;margin:.35em auto .45em}.tbb{font-family:Arial,sans-serif;font-size:8pt;text-transform:uppercase;letter-spacing:.12em;color:#888;margin-bottom:.2em}.tbp{font-size:13pt;font-weight:bold;color:#1a1a1a;line-height:1.7}.tbd{font-size:9pt;color:#777;margin-top:.5em;font-family:Arial,sans-serif;line-height:1.9}.tbr2{border:none;border-top:1px solid #ccc;width:75%;margin:.6em auto 0}.cib{margin:auto auto 0 auto;width:5.2in;border:1px solid #d0d0c8;border-radius:6px;padding:18px 26px;font-family:Arial,sans-serif;background:#fafaf8}.cib-title{font-size:8pt;text-transform:uppercase;letter-spacing:.07em;color:#888;margin-bottom:14px;font-weight:700}.cib-row{display:flex;align-items:center;gap:16px;margin-bottom:10px}.cib-row:last-child{margin-bottom:0}.cib-label{font-size:9pt;color:#333;width:2.4in;flex-shrink:0;line-height:1.5}.cib-line{flex:1;border-bottom:1.5px solid #555;height:22px}.cfoot{margin-top:.35in;padding-top:.2in;border-top:.75px solid #ddd;font-family:Arial,sans-serif;font-size:7.5pt;color:#aaa;display:flex;justify-content:space-between;align-items:flex-end}.cfl{line-height:1.6}.cfr{text-align:right;line-height:1.6}.pb{width:6.5in;margin:0 auto}.preamble{margin-bottom:1em;text-align:justify}.whereas{margin-bottom:.6em;padding-left:2em;text-indent:-2em;text-align:justify}.therefore{margin:1.2em 0;text-align:justify}.art{font-size:12pt;font-weight:bold;text-align:center;text-transform:uppercase;letter-spacing:.06em;margin:2em 0 .75em;border-top:1px solid #ccc;padding-top:1em;page-break-after:avoid}.sec{margin-bottom:.9em;text-align:justify;page-break-inside:avoid;orphans:3;widows:3}.sn{font-weight:bold}.st{font-weight:bold}.nw{display:flex;gap:.5in;margin:1em 0}.nc{flex:1;line-height:1.5}.nc p{margin:.1em 0}.nl{font-weight:bold;margin-bottom:.3em}.sigs{page-break-before:always}.siw{display:flex;gap:.6in;margin-top:1.5em}.sp{flex:1;line-height:1.6}.pn{font-weight:bold;font-size:10.5pt;text-transform:uppercase;letter-spacing:.04em;font-family:Arial,sans-serif;margin-bottom:.5em;padding-bottom:.3em;border-bottom:1px solid #ccc}.slw{margin-top:1.4em}.sl{display:block;width:2.9in;border-bottom:1.5px solid #000;margin-bottom:.25em}.sf{font-size:10.5pt}.sfl{font-size:8.5pt;font-family:Arial,sans-serif;color:#888;text-transform:uppercase;letter-spacing:.04em}.exhibit{page-break-before:always}.exh{font-size:13pt;font-weight:bold;margin-bottom:.25em;text-transform:uppercase;letter-spacing:.06em}.exs{font-weight:bold;margin-bottom:1em}.etbl{width:100%;border-collapse:collapse;margin-top:1em;font-size:10.5pt}.etbl th,.etbl td{border:1px solid #999;padding:5px 9px}.etbl th{background:#eee;font-weight:bold;text-align:left}.etbl tfoot td{background:#f5f5f2;font-weight:bold}.amt{text-align:right;white-space:nowrap}@media print{.cover-page{page-break-after:always}.art{page-break-after:avoid}.sec{page-break-inside:avoid}.sigs{page-break-before:always}.exhibit{page-break-before:always}}';
+
+  var tabTitle='Quicky Markets \u2014 '+(propAddr&&propAddr!=='[PROPERTY ADDRESS]'?propAddr+' Agreement':'Agreement');
+  var html='<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>'+tabTitle+'</title><style>'+css+'</style></head><body>'
+  +'<div class="cover-page"><div class="cover-logo"><img src="https://static.wixstatic.com/media/331de9_92bfe38166ac4870a1cce305a5ff935b~mv2.png/v1/crop/x_0,y_178,w_4250,h_919/fill/w_319,h_69,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/QM%20logo%20(2).png" alt="Quicky Markets"></div><hr class="cover-rule"><div class="title-block"><h1>Vendor License Agreement</h1><hr class="tbr"><div class="tbb">entered into between</div><div class="tbp">Quicky Markets LLC<br><span style="font-weight:400;color:#aaa;font-size:10pt">&amp;</span><br>'+cName+'</div><div class="tbd">Property: '+propAddr+'<br>'+county+' County, Florida &bull; Effective Date: '+eDate+'</div><hr class="tbr2"></div><div class="cib"><div class="cib-title">Page-by-page initials &mdash; both parties initial each page of this Agreement</div><div class="cib-row"><div class="cib-label"><strong>Vendor</strong> &mdash; Quicky Markets LLC<br><span style="font-size:8pt;color:#888">Eduardo Machado, Owner</span></div><div class="cib-line"></div></div><div class="cib-row"><div class="cib-label"><strong>Client</strong> &mdash; '+cName+'<br><span style="font-size:8pt;color:#888">'+sigName+', '+sigTitle+'</span></div><div class="cib-line"></div></div></div><div class="cfoot"><div class="cfl">Quicky Markets LLC &bull; 16385 Biscayne Blvd CU-1, North Miami Beach FL 33160<br>founders@quickymarkets.com &bull; quickymarkets.com</div><div class="cfr">Confidential &mdash; Legal Document<br>Dated: '+eDate+'</div></div></div>'
+  +'<div class="pb">'
+  +'<p class="preamble">This <strong>VENDOR LICENSE AGREEMENT</strong> (this &ldquo;Agreement&rdquo;), dated as of <strong>'+eDate+'</strong> (the &ldquo;Effective Date&rdquo;), is entered into by and between <strong>Quicky Markets LLC</strong>, a Florida limited liability company with its principal place of business at 16385 Biscayne Blvd, CU-1, North Miami Beach, Florida 33160 (the &ldquo;Vendor&rdquo;), and <strong>'+cName+'</strong>, a '+cState+' limited liability company whose mailing address is '+cMailAddr+' (the &ldquo;Client&rdquo;). The Vendor and the Client are referred to herein individually as a &ldquo;Party&rdquo; and collectively as the &ldquo;Parties.&rdquo;</p>'
+  +'<p class="whereas"><strong>WHEREAS</strong>, the Vendor is in the business of providing food and beverages through unmanned, self-checkout mini markets (each, a &ldquo;Market&rdquo;) for the benefit of commercial and residential building owners and their tenants and residents;</p>'
+  +'<p class="whereas"><strong>WHEREAS</strong>, the Vendor desires to place and operate a Market at the Client&rsquo;s property located at '+propAddr+' (the &ldquo;Property&rdquo;), in the area described on Exhibit A attached hereto (the &ldquo;Market Location&rdquo;); and</p>'
+  +'<p class="whereas"><strong>WHEREAS</strong>, the Client and the Vendor desire to enter into an agreement governing the Vendor&rsquo;s use of the Market Location, subject to the terms and conditions set forth herein.</p>'
+  +'<p class="therefore"><strong>NOW, THEREFORE</strong>, in consideration of the mutual covenants and agreements contained herein, and for other good and valuable consideration, the receipt and sufficiency of which are acknowledged, the Parties agree as follows:</p>'
+  +'<div class="art">Article 1 &mdash; Market Services</div>'
+  +'<p class="sec"><span class="sn">1.1</span> <span class="st">Grant of Revocable License.</span> The Client hereby grants to the Vendor a non-exclusive, revocable license to enter upon the Property for the sole purpose of installing, maintaining, and operating the Market at the Market Location. The Vendor shall cooperate in good faith with the Client to minimize interference with the Client&rsquo;s use and operation of the Property. The Client shall ensure the Vendor has reasonable access to the Market Location throughout the term of this Agreement. Subject to the Vendor not being in default under this Agreement, the Vendor is granted a right of occupancy for the Market Location.'+readyExtra+'</p>'
+  +'<p class="sec"><span class="sn">1.2</span> <span class="st">Market Equipment and Installation.</span> Within thirty (30) days of the Effective Date, the Client shall cause the removal from the Property of any third-party vendors (other than existing retail tenants) offering food or beverage items of the type to be provided by the Vendor, including automated vending machines. '+buildInstallText().replace(/"/g,'&quot;').replace(/'/g,"'").replace(/\u201C|\u201D/g,'&ldquo;').replace(/'/g,'&rsquo;')+(equipExtra?' '+equipExtra:'')+'</p>'
+  +'<p class="sec"><span class="sn">1.3</span> <span class="st">Market Services and Product Standards.</span> During the term of this Agreement, the Vendor shall supply the Market with all necessary equipment, food items, beverages, sundries, and related products and shall ensure the Market remains reasonably stocked at all times. The selection of all products offered for sale shall be within the exclusive discretion of the Vendor. The Vendor shall price items reasonably in light of the location and the nature of the products offered.'+alcoholExtra+' '+expiredText+'</p>'
+  +'<p class="sec"><span class="sn">1.4</span> <span class="st">Market Maintenance and Hours.</span> '+maintText+'</p>'
+  +'<p class="sec"><span class="sn">1.5</span> <span class="st">Name and Signage.</span> The Market shall operate under the name &ldquo;Quicky Markets&rdquo; and shall be branded accordingly. The Vendor may place signage within the Market Location for marketing and promotional purposes at the Vendor&rsquo;s sole cost and expense, subject to the Client&rsquo;s prior written approval, which shall be in the Client&rsquo;s sole discretion. Upon termination, the Vendor shall promptly remove all signage and restore the Market Location to its original condition, reasonable wear and tear excepted.</p>'
+  +'<div class="art">Article 2 &mdash; Financial Terms</div>'
+  +'<p class="sec"><span class="sn">2.1</span> <span class="st">Expenses and Risk of Loss.</span> '+(buildoutType==='vendor'?'The Vendor shall be solely responsible for all costs associated with the installation, operation, and maintenance of the Market, with the exception of utilities (HVAC, water, and electricity), which shall be provided by the Client at the Client&rsquo;s expense. The Client shall also be responsible for ensuring the Market Location is equipped with: (i) a FOB-based access control system on the entry door; (ii) sufficient electrical capacity and data-line (internet) connectivity for the Vendor&rsquo;s operations; and (iii) any ventilation or hot air extraction systems required to support the Vendor&rsquo;s refrigeration equipment. The Client shall bear all associated infrastructure costs.':'The Client shall be responsible for the full cost of the Market buildout as further described in Section 4.5. The Vendor shall be responsible for the ongoing operational costs of the Market, including restocking, maintenance of the Vendor&rsquo;s equipment and POS systems. The Client shall provide utilities (HVAC, water, electricity) and data-line (internet) connectivity at no cost to the Vendor.')+' Notwithstanding any other provision hereof, the Vendor expressly assumes all risk of loss with respect to its merchandise and personal property at the Market Location, and the Client shall bear no liability for theft, vandalism, or casualty affecting the same, whether caused by tenants, trespassers, or invitees, except as otherwise expressly provided in Section 2.3 and its subsections. The Vendor irrevocably waives any right of subrogation against the Client with respect to such losses, except as provided in Section 2.3.</p>'
+  +'<p class="sec"><span class="sn">2.2</span> <span class="st">License Fee.</span> '+feeText+'</p>'
+  +theftHTML
+  +subsidiesHTML
+  +auditHTML
+  +'<div class="art">Article 3 &mdash; Term and Termination</div>'
+  +'<p class="sec"><span class="sn">3.1</span> <span class="st">Term.</span> '+termText+'</p>'
+  +'<p class="sec"><span class="sn">3.2</span> <span class="st">Termination.</span> '+termNoticeText+'</p>'
+  +etHTML
+  +'<p class="sec"><span class="sn">'+duties34+'</span> <span class="st">Duties Upon Termination.</span> Upon the termination or expiration of this Agreement for any reason, the Vendor shall, within thirty (30) days of the effective termination date, remove all of its equipment, merchandise, and personal property from the Property and restore the Market Location to its original condition, reasonable wear and tear excepted. The Vendor shall promptly repair any damage caused by its use of or removal of property from the Market Location. These obligations survive termination or expiration of this Agreement.</p>'
+  +'<div class="art">Article 4 &mdash; Covenants and Representations</div>'
+  +'<p class="sec"><span class="sn">4.1</span> <span class="st">Vendor Representations.</span> The Vendor represents and warrants that: (a) the execution and performance of this Agreement does not conflict with or cause a default under any agreement to which the Vendor is a party; (b) this Agreement constitutes the valid and binding obligation of the Vendor, enforceable in accordance with its terms; and (c) the Vendor shall perform its obligations hereunder in a professional and workmanlike manner in compliance with all applicable federal, state, and local laws and regulations.</p>'
+  +'<p class="sec"><span class="sn">4.2</span> <span class="st">Client Representations.</span> The Client represents and warrants that: (a) the execution and performance of this Agreement does not conflict with or cause a default under any agreement to which the Client is a party, including any lease relating to the Property; (b) this Agreement constitutes the valid and binding obligation of the Client, enforceable in accordance with its terms; and (c) the Client shall perform its obligations hereunder in a professional and workmanlike manner in compliance with all applicable federal, state, and local laws and regulations.</p>'
+  +'<p class="sec"><span class="sn">4.3</span> <span class="st">Permits and Licenses.</span> The Vendor represents and warrants that it possesses, and shall maintain throughout the term of this Agreement, all governmental authorizations, permits, and licenses required to operate the Market in compliance with applicable law. In the event the Client receives any notice of violation or citation from a governmental authority arising from the Vendor&rsquo;s presence or operations at the Property, the Vendor shall be solely responsible for curing such violation and bearing all associated costs promptly. Failure to timely cure any such violation shall constitute a material breach of this Agreement.</p>'
+  +'<p class="sec"><span class="sn">4.4</span> <span class="st">Intellectual Property and Data.</span> All intellectual property rights related to the Vendor&rsquo;s business, the Market brand, and the Vendor&rsquo;s operations belong exclusively to the Vendor. All sales data, customer data, inventory data, analytics, and reports generated through the Vendor&rsquo;s systems are and shall remain the exclusive property of the Vendor. The Vendor may share summary operational reports with the Client upon request but shall not be required to disclose detailed item-level transaction data, customer information, or proprietary database contents. The Client reciprocally retains all intellectual property rights with respect to its own business and operations. Nothing herein grants either party any license or right to use the other party&rsquo;s intellectual property, except as expressly set forth herein.</p>'
+  +'<p class="sec"><span class="sn">4.5</span> <span class="st">Buildout, Ownership, Furniture, and Lighting.</span> '+buildoutText+' '+lightingText+'</p>'
+  +'<div class="art">Article 5 &mdash; General Provisions</div>'
+  +'<p class="sec"><span class="sn">5.1</span> <span class="st">Notices.</span> All notices required or permitted under this Agreement shall be in writing and delivered personally, sent by nationally recognized overnight courier, or sent by first-class mail, return receipt requested, as follows:</p>'
+  +'<div class="nw"><div class="nc"><p class="nl">Notices to the Client:</p><p>'+cName+'</p><p>Attention: '+contactName+', '+contactTitle+'</p><p>'+noticeAddr+'</p>'+(contactEmail?'<p>Email: '+contactEmail+'</p>':'')+'</div><div class="nc"><p class="nl">Notices to the Vendor:</p><p>Quicky Markets LLC</p><p>Attention: Eduardo Machado, Owner</p><p>16385 Biscayne Blvd, CU-1</p><p>North Miami Beach, Florida 33160</p><p>Email: founders@quickymarkets.com</p></div></div>'
+  +'<p class="sec">Either Party may change its notice address by providing written notice to the other Party. Notices shall be deemed given upon personal delivery, one (1) business day after deposit with an overnight courier, or three (3) business days after first-class mailing.</p>'
+  +'<p class="sec"><span class="sn">5.2</span> <span class="st">Independent Contractor.</span> The Vendor is and shall remain an independent contractor and not an employee, agent, partner, or joint venturer of the Client. Nothing herein shall create an employment relationship, partnership, joint venture, or agency between the Parties.</p>'
+  +'<p class="sec"><span class="sn">5.3</span> <span class="st">Communications.</span> The Client agrees to announce the opening of the Market to its tenants and residents via written communication drafted by the Vendor and approved by the Client, distributed by email or posted on community bulletin boards within three (3) calendar days of the Market&rsquo;s opening.</p>'
+  +'<p class="sec"><span class="sn">5.4</span> <span class="st">Exclusivity.</span> The Client agrees that, for so long as this Agreement remains in effect, the Client shall not lease, license, or otherwise permit any third party to operate any business at the Property substantially similar to or in direct competition with the Market&rsquo;s operations, including any unmanned or automated food and beverage retail or vending operation. This restriction applies to the entirety of the Property. Any breach of this obligation shall be deemed a material breach of this Agreement. The Client retains the right to lease space to traditional restaurant or food-service operators and to provide food or beverage products to its residents in connection with resident appreciation events or similar community activities not conducted on a commercial, revenue-generating basis. Nothing in this Agreement shall restrict the Vendor&rsquo;s right to operate Markets or similar businesses at other properties or commercial buildings.</p>'
+  +'<p class="sec"><span class="sn">5.5</span> <span class="st">References.</span> The Client agrees to serve as a reference for the Vendor with respect to the Market&rsquo;s operations on a reasonable basis and to permit occasional tours of the Market Location by the Vendor&rsquo;s prospective clients, subject to reasonable notice and scheduling.</p>'
+  +'<p class="sec"><span class="sn">5.6</span> <span class="st">Indemnification and Insurance.</span> The Vendor shall indemnify, defend, and hold harmless the Client and its officers, directors, members, employees, agents, and representatives from and against all losses, claims, liabilities, damages, costs, and expenses (including reasonable attorneys&rsquo; fees) arising from: (i) the Vendor&rsquo;s performance or nonperformance of its obligations under this Agreement; (ii) any violation of law or regulation by the Vendor; or (iii) the negligence or willful misconduct of the Vendor or its personnel, except to the extent caused by the Client&rsquo;s own negligence or willful misconduct. The Client shall indemnify, defend, and hold harmless the Vendor and its officers, directors, members, employees, agents, and representatives from and against all losses, claims, liabilities, damages, costs, and expenses (including reasonable attorneys&rsquo; fees) arising from the Client&rsquo;s performance or nonperformance of its obligations under this Agreement, except to the extent caused by the Vendor&rsquo;s own negligence or willful misconduct. '+insText+'</p>'
+  +'<p class="sec"><span class="sn">5.7</span> <span class="st">Force Majeure.</span> Neither Party shall be liable for any delay or failure to perform its obligations hereunder to the extent caused by events beyond its reasonable control that could not have been avoided by due diligence, including acts of God, natural disasters, fire, flood, war, terrorism, government quarantines, strikes, or utility failures, but expressly excluding events arising from a Party&rsquo;s own fault or breach. The affected Party shall promptly notify the other Party and use commercially reasonable efforts to resume performance as soon as practicable.</p>'
+  +'<p class="sec"><span class="sn">5.8</span> <span class="st">Severability.</span> If any provision of this Agreement is held to be invalid, illegal, or unenforceable, it shall be modified to the minimum extent necessary to make it enforceable, and the remaining provisions shall continue in full force and effect.</p>'
+  +'<p class="sec"><span class="sn">5.9</span> <span class="st">Entire Agreement.</span> This Agreement, together with all exhibits, constitutes the entire agreement of the Parties with respect to its subject matter and supersedes all prior understandings, negotiations, and agreements, whether oral or written, relating thereto.</p>'
+  +'<p class="sec"><span class="sn">5.10</span> <span class="st">Further Assurances.</span> Each Party agrees to execute such additional documents and take such further actions as may be reasonably necessary to carry out the intent and purposes of this Agreement.</p>'
+  +'<p class="sec"><span class="sn">5.11</span> <span class="st">Counterparts.</span> This Agreement may be executed in counterparts, including by electronic or facsimile signature, each of which shall be deemed an original and all of which together shall constitute one and the same instrument.</p>'
+  +'<p class="sec"><span class="sn">5.12</span> <span class="st">No Strict Construction.</span> This Agreement has been negotiated and drafted by both Parties and shall not be construed strictly against either Party as the drafter.</p>'
+  +'<p class="sec"><span class="sn">5.13</span> <span class="st">Successors and Assigns.</span> This Agreement shall be binding upon and inure to the benefit of the Parties and their respective successors and permitted assigns. Neither Party may assign any rights or obligations hereunder without the prior written consent of the other Party, except that: '+(affiliateAssign?'(a) either Party may assign this Agreement to an affiliate under common control without the other Party&rsquo;s consent; and (b)':'(a)')+' the Client may freely assign this Agreement without the Vendor&rsquo;s consent in connection with a sale of the Property or a transfer of a majority of the Client&rsquo;s membership interests to a third party.</p>'
+  +'<p class="sec"><span class="sn">5.14</span> <span class="st">Governing Law; Dispute Resolution.</span> This Agreement shall be governed by and construed in accordance with the laws of the State of Florida, without regard to its conflict-of-laws principles. Any dispute arising out of or relating to this Agreement shall be resolved exclusively in the state or federal courts of competent jurisdiction in '+county+' County, Florida. Each Party irrevocably submits to the personal jurisdiction of such courts and waives any objection to venue or inconvenient forum.</p>'
+  +'<p class="sec"><span class="sn">5.15</span> <span class="st">Amendment and Waiver.</span> This Agreement may not be amended or modified except by a written instrument signed by authorized representatives of both Parties. No waiver shall be effective unless made in writing, and no waiver shall constitute a waiver of any other provision or of the same provision on any other occasion.</p>'
+  +'<p class="sec"><span class="sn">5.16</span> <span class="st">Section Headings.</span> The article and section headings are for convenience of reference only and shall not affect the interpretation of this Agreement.</p>'
+  +'<p class="sec"><span class="sn">5.17</span> <span class="st">No Third-Party Beneficiaries.</span> This Agreement is made solely for the benefit of the Parties and their respective successors and permitted assigns. Nothing herein shall create any rights in any third party.</p>'
+  +'<p class="sec"><span class="sn">5.18</span> <span class="st">Independent Counsel.</span> Each Party acknowledges having had the opportunity to consult with independent legal counsel prior to executing this Agreement. Any ambiguity shall be resolved by applying the most reasonable interpretation, without regard to which Party drafted the provision.</p>'
+  +customNotesHTML
+  +'<div class="sigs"><p style="margin-bottom:1.5em;text-align:justify"><strong>IN WITNESS WHEREOF</strong>, the undersigned, intending to be legally bound, have executed this Agreement as of the date first written above.</p>'
+  +'<div class="siw"><div class="sp"><p class="pn">The Vendor</p><p><strong>Quicky Markets LLC</strong></p><p>A Florida Limited Liability Company</p><div class="slw"><span class="sfl">Signature</span><span class="sl">&nbsp;</span><p class="sf">Name: Eduardo Machado</p><p class="sf">Title: Owner</p><p class="sf">Date: <span style="display:inline-block;width:1.6in;border-bottom:1px solid #000">&nbsp;</span></p></div></div><div class="sp"><p class="pn">The Client</p>'+sigClientHTML+'</div></div></div>'
+  +exhibitBHTML
+  +'</div><script>window.onload=function(){document.title=document.title;};<\/script></body></html>';
+  return html;
+}
+
+function exportContract(){
+  var html=buildExportHTML();
+  var w=window.open('','_blank');
+  if(!w){alert('Please allow pop-ups for this page and try again.');return;}
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  setTimeout(function(){w.print();},700);
+}
+
+
+
+
+// ─── INIT ────────────────────────────────────────────────────────────
+renderTiers();
+renderInvoice();
+selectAccess('yes');
+selectTheft('b');
+selectBuildout('vendor');
+lu();
+
+// ─── FINAL EDITOR ────────────────────────────────────────────────────
+function loadFinalEditor(){
+  var html=buildExportHTML();
+  var body=html
+    .replace(/^[\s\S]*?<body[^>]*>/,'')
+    .replace(/<script[\s\S]*?<\/script>/gi,'')
+    .replace(/<\/body>[\s\S]*$/,'')
+    .trim();
+  var frame=document.getElementById('final-editor-frame');
+  if(frame){
+    frame.innerHTML=body;
+    frame.querySelectorAll('img').forEach(function(img){img.draggable=false;});
+  }
+}
+
+function exportFromEditor(){
+  var frame=document.getElementById('final-editor-frame');
+  if(!frame||!frame.innerHTML.trim()){
+    alert('The editor is empty. Click "Reset from form" first to load the contract.');
+    return;
+  }
+  var propAddr=v('propAddr')||'';
+  var tabTitle='Quicky Markets \u2014 '+(propAddr&&propAddr!=='[PROPERTY ADDRESS]'?propAddr+' Agreement':'Agreement');
+  var css='*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;font-size:11.5pt;line-height:1.75;color:#000;background:#fff;margin:0;padding:0}@page{size:letter portrait;margin:1in}.cover-page{width:6.5in;margin:0 auto;min-height:9in;display:flex;flex-direction:column}.cover-logo{text-align:center;margin-bottom:.5in}.cover-logo img{height:52px}.cover-rule{border:none;border-top:2.5px solid #1a1a1a;margin:0 0 .4in}.title-block{text-align:center;margin-bottom:.6in}.title-block h1{font-size:20pt;font-weight:bold;text-transform:uppercase;letter-spacing:.14em;margin:0 0 .2em}.tbr{border:none;border-top:2px solid #1a1a1a;width:3in;margin:.35em auto .45em}.tbb{font-family:Arial,sans-serif;font-size:8pt;text-transform:uppercase;letter-spacing:.12em;color:#888;margin-bottom:.2em}.tbp{font-size:13pt;font-weight:bold;color:#1a1a1a;line-height:1.7}.tbd{font-size:9pt;color:#777;margin-top:.5em;font-family:Arial,sans-serif;line-height:1.9}.tbr2{border:none;border-top:1px solid #ccc;width:75%;margin:.6em auto 0}.cib{margin:auto auto 0 auto;width:5.2in;border:1px solid #d0d0c8;border-radius:6px;padding:18px 26px;font-family:Arial,sans-serif;background:#fafaf8}.cib-title{font-size:8pt;text-transform:uppercase;letter-spacing:.07em;color:#888;margin-bottom:14px;font-weight:700}.cib-row{display:flex;align-items:center;gap:16px;margin-bottom:10px}.cib-row:last-child{margin-bottom:0}.cib-label{font-size:9pt;color:#333;width:2.4in;flex-shrink:0;line-height:1.5}.cib-line{flex:1;border-bottom:1.5px solid #555;height:22px}.cfoot{margin-top:.35in;padding-top:.2in;border-top:.75px solid #ddd;font-family:Arial,sans-serif;font-size:7.5pt;color:#aaa;display:flex;justify-content:space-between;align-items:flex-end}.cfl{line-height:1.6}.cfr{text-align:right;line-height:1.6}.pb{width:6.5in;margin:0 auto}.preamble{margin-bottom:1em;text-align:justify}.whereas{margin-bottom:.6em;padding-left:2em;text-indent:-2em;text-align:justify}.therefore{margin:1.2em 0;text-align:justify}.art{font-size:12pt;font-weight:bold;text-align:center;text-transform:uppercase;letter-spacing:.06em;margin:2em 0 .75em;border-top:1px solid #ccc;padding-top:1em;page-break-after:avoid}.sec{margin-bottom:.9em;text-align:justify;page-break-inside:avoid;orphans:3;widows:3}.sn{font-weight:bold}.st{font-weight:bold}.nw{display:flex;gap:.5in;margin:1em 0}.nc{flex:1;line-height:1.5}.nc p{margin:.1em 0}.nl{font-weight:bold;margin-bottom:.3em}.sigs{page-break-before:always}.siw{display:flex;gap:.6in;margin-top:1.5em}.sp{flex:1;line-height:1.6}.pn{font-weight:bold;font-size:10.5pt;text-transform:uppercase;letter-spacing:.04em;font-family:Arial,sans-serif;margin-bottom:.5em;padding-bottom:.3em;border-bottom:1px solid #ccc}.slw{margin-top:1.4em}.sl{display:block;width:2.9in;border-bottom:1.5px solid #000;margin-bottom:.25em}.sf{font-size:10.5pt}.sfl{font-size:8.5pt;font-family:Arial,sans-serif;color:#888;text-transform:uppercase;letter-spacing:.04em}.exhibit{page-break-before:always}.exh{font-size:13pt;font-weight:bold;margin-bottom:.25em;text-transform:uppercase;letter-spacing:.06em}.exs{font-weight:bold;margin-bottom:1em}.etbl{width:100%;border-collapse:collapse;margin-top:1em;font-size:10.5pt}.etbl th,.etbl td{border:1px solid #999;padding:5px 9px}.etbl th{background:#eee;font-weight:bold;text-align:left}.etbl tfoot td{background:#f5f5f2;font-weight:bold}.amt{text-align:right;white-space:nowrap}@media print{.cover-page{page-break-after:always}.art{page-break-after:avoid}.sec{page-break-inside:avoid}.sigs{page-break-before:always}.exhibit{page-break-before:always}}';
+  var printHtml='<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>'+tabTitle+'</title><style>'+css+'</style></head><body>'+frame.innerHTML+'</body></html>';
+  var w=window.open('','_blank');
+  if(!w){alert('Please allow pop-ups and try again.');return;}
+  w.document.write(printHtml);
+  w.document.close();
+  w.focus();
+  setTimeout(function(){w.print();},700);
+}
+</script>
+<!-- ═══ SAVE/LOAD MODAL ═══ -->
+<div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:14px;padding:1.5rem;width:520px;max-width:94vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.18)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <strong style="font-size:16px">Saved Contracts</strong>
+      <span onclick="closeModal()" style="cursor:pointer;font-size:22px;color:#888;line-height:1">&times;</span>
+    </div>
+    <div id="saved-list" style="flex:1;overflow-y:auto;margin-bottom:1rem"></div>
+    <div style="font-size:12px;color:#888;border-top:1px solid #f0f0ec;padding-top:.75rem">Contracts are saved in this browser only. Clearing browser data will remove them. To back up, use Export PDF.</div>
+  </div>
+</div>
+
+<!-- SAVE NAME MODAL -->
+<div id="save-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:14px;padding:1.5rem;width:420px;max-width:94vw;box-shadow:0 8px 40px rgba(0,0,0,.18)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <strong style="font-size:16px">Save Contract</strong>
+      <span onclick="closeSaveModal()" style="cursor:pointer;font-size:22px;color:#888;line-height:1">&times;</span>
+    </div>
+    <div style="font-size:13px;color:#666;margin-bottom:.75rem">Give this contract a name so you can find it later.</div>
+    <input type="text" id="save-name-input" placeholder="e.g. Alvorada — North Miami Beach" style="width:100%;padding:9px 12px;border:1px solid #d4d4cc;border-radius:8px;font-size:14px;margin-bottom:1rem;font-family:Arial,sans-serif">
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="closeSaveModal()">Cancel</button>
+      <button class="btn primary" onclick="confirmSave()">&#128190; Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var STORAGE_KEY='qm_contracts_v1';
+
+function gatherState(){
+  var fields=['clientName','clientState','clientMailAddr','propAddr','county','effectiveDate',
+    'contactName','contactTitle','noticeAddr','contactEmail','managerEntity','managerRole',
+    'sigName','sigTitle','numUnits','installDays','termYears','termRenewal','termNoticeDays','postTermDays',
+    'fixedPct','fixedBasis','greaterPct','greaterPerUnit','tierCap','etFlatAmt','etClientAmt',
+    'fineAmt','fineAmtC','unintentional1','lightingCost','fobCount','ebPct1','customNotes',
+    'ebTitle','ebNote','ebPayInstructions','intEntityName','int2EntityName','intEntityState'];
+  var checks=['customFurniture','hasLighting','propSaleTerm','et365','fineSplit','fineSplitC',
+    'newEquipment','ventilation','fobKeys','readySpace','coffeeMachine','clientFurnitureRepair',
+    'furnitureApproval','alcoholConsent','affiliateAssign','subsidies','auditRights',
+    'hasExhibitB','hasIntermediate'];
+  var state={
+    feeType:feeType,etType:etType,buildoutType:buildoutType,
+    accessType:accessType,theftType:theftType,
+    tiers:JSON.parse(JSON.stringify(tiers)),
+    invRows:JSON.parse(JSON.stringify(invRows))
+  };
+  fields.forEach(function(id){var el=document.getElementById(id);if(el)state[id]=el.value;});
+  checks.forEach(function(id){var el=document.getElementById(id);if(el)state[id]=el.checked;});
+  var lu=document.getElementById('lp-upfront');
+  if(lu)state['lp-upfront']=lu.checked;
+  return state;
+}
+
+function restoreState(state){
+  var fields=['clientName','clientState','clientMailAddr','propAddr','county','effectiveDate',
+    'contactName','contactTitle','noticeAddr','contactEmail','managerEntity','managerRole',
+    'sigName','sigTitle','numUnits','installDays','termYears','termRenewal','termNoticeDays','postTermDays',
+    'fixedPct','fixedBasis','greaterPct','greaterPerUnit','tierCap','etFlatAmt','etClientAmt',
+    'fineAmt','fineAmtC','unintentional1','lightingCost','fobCount','ebPct1','customNotes',
+    'ebTitle','ebNote','ebPayInstructions','intEntityName','int2EntityName','intEntityState'];
+  var checks=['customFurniture','hasLighting','propSaleTerm','et365','fineSplit','fineSplitC',
+    'newEquipment','ventilation','fobKeys','readySpace','coffeeMachine','clientFurnitureRepair',
+    'furnitureApproval','alcoholConsent','affiliateAssign','subsidies','auditRights',
+    'hasExhibitB','hasIntermediate'];
+
+  if(state.tiers)tiers=state.tiers;
+  if(state.invRows)invRows=state.invRows;
+
+  fields.forEach(function(id){
+    if(state[id]!==undefined){var el=document.getElementById(id);if(el)el.value=state[id];}
+  });
+  checks.forEach(function(id){
+    if(state[id]!==undefined){var el=document.getElementById(id);if(el)el.checked=state[id];}
+  });
+
+  if(state['lp-upfront']!==undefined){
+    var u=document.getElementById('lp-upfront');if(u)u.checked=state['lp-upfront'];
+    var d=document.getElementById('lp-deduct');if(d)d.checked=!state['lp-upfront'];
+  }
+
+  selectBuildout(state.buildoutType||'vendor');
+  selectFee(state.feeType||'nofee');
+  selectET(state.etType||'furniture');
+  selectAccess(state.accessType||'yes');
+  selectTheft(state.theftType||'b');
+
+  var lightCfg=document.getElementById('cfg-lighting');
+  if(lightCfg)lightCfg.classList.toggle('show',!!state.hasLighting);
+  var intCfg=document.getElementById('cfg-intermediate');
+  if(intCfg)intCfg.classList.toggle('show',!!state.hasIntermediate);
+  var fobCfg=document.getElementById('cfg-fob');
+  if(fobCfg)fobCfg.classList.toggle('show',!!state.fobKeys);
+  var fobRow=document.getElementById('cfg-fob-row');
+  if(fobRow)fobRow.style.display=(state.accessType==='no'?'none':'');
+
+  renderTiers();
+  renderInvoice();
+  syncPct2();
+  lu();
+}
+
+function getSaved(){
+  try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');}catch(e){return {};}
+}
+function putSaved(obj){localStorage.setItem(STORAGE_KEY,JSON.stringify(obj));}
+
+function saveContract(){
+  var suggested=(v('clientName')||'Contract')+(v('propAddr')?' \u2014 '+v('propAddr'):'');
+  document.getElementById('save-name-input').value=suggested;
+  document.getElementById('save-modal-overlay').style.display='flex';
+  setTimeout(function(){document.getElementById('save-name-input').select();},80);
+}
+
+function confirmSave(){
+  var name=document.getElementById('save-name-input').value.trim();
+  if(!name){alert('Please enter a name.');return;}
+  var saved=getSaved();
+  saved[name]={state:gatherState(),savedAt:new Date().toISOString()};
+  putSaved(saved);
+  closeSaveModal();
+  showToast('\u2713 Saved: "'+name+'"');
+}
+
+function closeSaveModal(){document.getElementById('save-modal-overlay').style.display='none';}
+
+function openSaved(){
+  renderSavedList();
+  document.getElementById('modal-overlay').style.display='flex';
+}
+
+function renderSavedList(){
+  var saved=getSaved();
+  var keys=Object.keys(saved).sort(function(a,b){
+    return new Date(saved[b].savedAt)-new Date(saved[a].savedAt);
+  });
+  var list=document.getElementById('saved-list');
+  if(keys.length===0){
+    list.innerHTML='<div style="text-align:center;color:#888;padding:2rem;font-size:13px">No saved contracts yet.<br><br>Fill in the form and click <strong>\uD83D\uDCBE Save to browser</strong> in the sidebar.</div>';
+    return;
+  }
+  list.innerHTML=keys.map(function(name){
+    var dt=new Date(saved[name].savedAt);
+    var ds=dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    var ts=dt.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    var prop=saved[name].state&&saved[name].state.propAddr?saved[name].state.propAddr:'';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:.85rem .25rem;border-bottom:1px solid #f0f0ec;gap:10px">'
+      +'<div style="min-width:0">'
+      +'<div style="font-size:13px;font-weight:600;color:#1a1a1a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(name)+'</div>'
+      +(prop?'<div style="font-size:11px;color:#aaa;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(prop)+'</div>':'')
+      +'<div style="font-size:11px;color:#ccc;margin-top:1px">Saved '+ds+' at '+ts+'</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px;flex-shrink:0">'
+      +'<button class="btn primary" style="font-size:12px;padding:5px 14px" onclick="loadContract(decodeURIComponent(\''+encodeURIComponent(name)+'\'))">Load</button>'
+      +'<button class="btn" style="font-size:12px;padding:5px 10px;color:#c0392b;border-color:#e0c0bc" onclick="deleteContract(decodeURIComponent(\''+encodeURIComponent(name)+'\'))" title="Delete">&#128465;</button>'
+      +'</div></div>';
+  }).join('');
+}
+
+function closeModal(){document.getElementById('modal-overlay').style.display='none';}
+
+function loadContract(name){
+  var saved=getSaved();
+  if(!saved[name])return;
+  if(!confirm('Load "'+name+'"? Unsaved changes to the current contract will be lost.'))return;
+  restoreState(saved[name].state);
+  closeModal();
+  goTo(0);
+  showToast('\u2713 Loaded: "'+name+'"');
+}
+
+function deleteContract(name){
+  if(!confirm('Permanently delete "'+name+'"?'))return;
+  var saved=getSaved();
+  delete saved[name];
+  putSaved(saved);
+  renderSavedList();
+  showToast('Deleted: "'+name+'"');
+}
+
+function exportContractData(){
+  var state=gatherState();
+  var clientName=v('clientName')||'Contract';
+  var propAddr=v('propAddr')||'';
+  var label=(clientName+(propAddr?' - '+propAddr:'')).replace(/[^a-zA-Z0-9\s\-]/g,'').replace(/\s+/g,'_').substring(0,60)||'contract';
+  var payload=JSON.stringify({__qm_version:1,savedAt:new Date().toISOString(),label:label,state:state},null,2);
+  var blob=new Blob([payload],{type:'application/json'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='QM_Contract_'+label+'.json';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);document.body.removeChild(a);},1000);
+  showToast('\u2713 Exported: QM_Contract_'+label+'.json');
+}
+
+function importContractData(input){
+  var file=input.files[0];
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=JSON.parse(e.target.result);
+      if(!data.__qm_version||!data.state){
+        alert('This file is not a valid Quicky Markets contract export.');
+        input.value='';return;
+      }
+      if(!confirm('Import "'+data.label+'"?\n\nThis will replace all current fields with the saved contract data.'))return;
+      restoreState(data.state);
+      goTo(0);
+      input.value='';
+      showToast('\u2713 Imported: '+data.label);
+    }catch(err){
+      alert('Could not read this file. It may be corrupted or is not a valid contract export.');
+      input.value='';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg){
+  var t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 22px;border-radius:8px;font-size:13px;z-index:9999;pointer-events:none;transition:opacity .4s;white-space:nowrap';
+  document.body.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';},2200);
+  setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},2700);
+}
+
+document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.getElementById('save-modal-overlay').addEventListener('click',function(e){if(e.target===this)closeSaveModal();});
+document.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();saveContract();}
+  if(e.key==='Escape'){closeModal();closeSaveModal();}
+});
+document.getElementById('save-name-input').addEventListener('keydown',function(e){if(e.key==='Enter')confirmSave();});
+</script>
+</body>
+</html>
